@@ -1,0 +1,49 @@
+# O. Reg. 170/03 rules engine — sampling & operational check requirements
+#
+# ⚠️ 每一条规则都必须对照 CanLII 现行合并文本逐条核对后才能把 verified 改为 true：
+# https://www.canlii.org/en/on/laws/regu/o-reg-170-03/latest/o-reg-170-03.html
+# source_section 字段必须填写条文号；下面的频次仅为骨架示例，未经核对不得用于演示结论。
+
+version: 0.1.0-draft
+regulation: "O. Reg. 170/03 (Drinking Water Systems), under the Safe Drinking Water Act, 2002"
+jurisdiction: "Ontario, Canada"
+last_verified_against: null  # e.g. "2026-09-XX, CanLII consolidated to O. Reg. XXX/XX"
+
+rule_sets:
+  - id: microbiological_sampling_distribution
+    description: "Distribution system microbiological sampling frequency for small municipal residential systems"
+    population_band: "< 100,000 (Maple Creek ≈ 4,800)"
+    rules:
+      - id: micro_dist_weekly
+        parameter: "E. coli / total coliform"
+        location: "distribution system"
+        frequency: "TODO — verify against regulation"
+        min_samples_per_period: null  # TODO
+        source_section: "TODO — e.g. O. Reg. 170/03, s. 10-x"
+        hard_constraint: true   # zero-gap requirement in scheduler
+        verified: false
+
+  - id: chlorine_operational_checks
+    description: "Operational checks of free chlorine residual"
+    rules:
+      - id: chlorine_residual_frequency
+        parameter: "free chlorine residual"
+        location: "distribution system sampling points"
+        frequency: "TODO — verify against regulation"
+        source_section: "TODO"
+        hard_constraint: true
+        verified: false
+
+  - id: adverse_result_reporting
+    description: "AWQI reporting duties — drives alert workflow, not scheduling"
+    rules:
+      - id: awqi_notification
+        trigger: "adverse test result (e.g. low chlorine, E. coli detection)"
+        action: "notify medical officer of health + ministry (immediate/verbal + written)"
+        source_section: "TODO — s. 18 / Schedule 16/17 as applicable"
+        hard_constraint: false  # workflow rule, not a scheduling constraint
+        verified: false
+
+notes:
+  - "Scheduler treats every hard_constraint rule as a zero-gap time window."
+  - "Every generated schedule must be reviewed by the licensed operator; the system is decision support only."

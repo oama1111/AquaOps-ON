@@ -1,0 +1,20 @@
+# Core (Unit 4+)
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+jinja2
+
+# Algorithms (Unit 5)
+pandas
+numpy
+scikit-learn
+wntr
+
+# Database (SQLite in dev; Postgres in deployment)
+psycopg2-binary
+
+# Testing (Unit 5/7)
+pytest
+pytest-cov
+httpx  # FastAPI test client
