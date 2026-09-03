@@ -1,0 +1,14 @@
+# WNTR L-TOWN chlorine check — 2026-09-03T16:05:51
+wntr version: 1.5.0
+network file: L-TOWN.inp
+nodes: 785 | links: 909 | junctions: 782 | tanks: 1
+chlorine sources added at reservoirs: ['R1', 'R2']
+quality results shape: (73, 785) (hours x nodes)
+chlorine mg/L across 782 junctions: mean=0.879, median=1.000, p5=0.010, p95=1.000, min=0.000, max=1.000
+5 junctions with lowest mean chlorine (decay tail):
+  n259: 0.000 mg/L
+  n207: 0.179 mg/L
+  n39: 0.232 mg/L
+  n352: 0.351 mg/L
+  n1: 0.404 mg/L
+plot saved: 2026-09-03-wntr-ltown-chlorine.png
