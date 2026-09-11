@@ -16,3 +16,5 @@ data/sim/
 .DS_Store
 .vscode/
 .idea/
+.venv.nosync/
+temp.*

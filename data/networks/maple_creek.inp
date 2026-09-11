@@ -1,0 +1,203 @@
+[TITLE]
+
+[JUNCTIONS]
+;ID                      Elevation       Demand Pattern                 
+ TP                               101               0 DIURNAL                    ;
+ A1                               102             1.2 DIURNAL                    ;
+ A2                               103               1 DIURNAL                    ;
+ A3                               104             1.1 DIURNAL                    ;
+ A4                               106             0.9 DIURNAL                    ;
+ B1                               105             0.8 DIURNAL                    ;
+ B2                               106             0.9 DIURNAL                    ;
+ B3                               108             0.7 DIURNAL                    ;
+ C1                               103               1 DIURNAL                    ;
+ C2                               104             1.1 DIURNAL                    ;
+ C3                               105             0.9 DIURNAL                    ;
+ D1                               104             0.5 DIURNAL                    ;
+ D2                               108             0.6 DIURNAL                    ;
+ D3                               109             0.4 DIURNAL                    ;
+ E1                               104             0.7 DIURNAL                    ;
+ E2                               106             0.5 DIURNAL                    ;
+ F1                               106             0.8 DIURNAL                    ;
+ F2                               107             0.5 DIURNAL                    ;
+ F3                               109             0.4 DIURNAL                    ;
+ J1                               108             0.6 DIURNAL                    ;
+ J2                               109             0.6 DIURNAL                    ;
+ J3                               108             0.7 DIURNAL                    ;
+ J4                               110             0.5 DIURNAL                    ;
+ J5                               111             0.4 DIURNAL                    ;
+ J6                               111             0.4 DIURNAL                    ;
+
+[RESERVOIRS]
+;ID                                   Head                  Pattern
+ WELLFIELD                        100                            ;
+
+[TANKS]
+;ID                              Elevation           Init Level            Min Level            Max Level             Diameter           Min Volume Volume Curve         Overflow            
+ T1                               130               8               2              12              15               0                                             ;
+
+[PIPES]
+;ID                   Node1                Node2                              Length             Diameter            Roughness           Minor Loss               Status
+ PTP                  TP                   A1                               250             250             110               0                 Open   ;
+ P01                  A1                   A2                               400             250             110               0                 Open   ;
+ P02                  A2                   A3                               400             250             110               0                 Open   ;
+ P03                  A3                   A4                               400             200             120               0                 Open   ;
+ P04                  A4                   J3                               400             200             120               0                 Open   ;
+ P05                  J3                   T1                                80             200             120               0                 Open   ;
+ P06                  A2                   B1                               400             150             130               0                 Open   ;
+ P07                  B1                   B2                               400             150             130               0                 Open   ;
+ P08                  B2                   A3                               400             150             130               0                 Open   ;
+ P09                  B2                   B3                               400             100             130               0                 Open   ;
+ P10                  A1                   C1                               400             150             130               0                 Open   ;
+ P11                  C1                   C2                               400             150             130               0                 Open   ;
+ P12                  C2                   C3                               400             150             130               0                 Open   ;
+ P13                  C3                   A3                               400             150             130               0                 Open   ;
+ P14                  C1                   D1                               350             100             140               0                 Open   ;
+ P15                  C3                   F1                               400             100             130               0                 Open   ;
+ P16                  F1                   F2                               350             100             140               0                 Open   ;
+ P17                  F2                   F3                               400             100             140               0                 Open   ;
+ P18                  F1                   D2                               400             100             130               0                 Open   ;
+ P19                  D2                   J5                               350             100             140               0                 Open   ;
+ P20                  B1                   E1                               400             100             130               0                 Open   ;
+ P21                  E1                   E2                               350             100             140               0                 Open   ;
+ P22                  E2                   J1                               403             100             140               0                 Open   ;
+ P23                  J1                   J2                               400             100             140               0                 Open   ;
+ P24                  J2                   B3                               566             100             140               0                 Open   ;
+ P25                  J3                   J4                               350             150             130               0                 Open   ;
+ P26                  J4                   J5                               400             100             140               0                 Open   ;
+ P27                  J4                   J6                               400             100             140               0                 Open   ;
+ P28                  J6                   B3                               750             100             140               0                 Open   ;
+ P29                  B3                   D3                               400             100             140               0                 Open   ;
+
+[PUMPS]
+;ID                   Node1                Node2                Properties          
+ P1                   WELLFIELD            TP                   HEAD     PCURVE                 ;
+
+[VALVES]
+;ID                   Node1                Node2                            Diameter Type              Setting           Minor Loss
+
+[TAGS]
+;type      name       tag       
+
+[DEMANDS]
+;ID        Demand     Pattern   
+
+[STATUS]
+;ID        Setting   
+
+[PATTERNS]
+;ID        Multipliers
+
+DIURNAL 0.450000 0.400000 0.380000 0.380000 0.420000 0.600000
+DIURNAL 0.850000 1.100000 1.250000 1.200000 1.100000 1.050000
+DIURNAL 1.000000 1.000000 1.020000 1.050000 1.150000 1.300000
+DIURNAL 1.350000 1.250000 1.050000 0.850000 0.650000 0.520000
+
+CL_DOSE 1.000000
+
+[CURVES]
+;ID         X-Value      Y-Value     
+;PUMP: PCURVE
+ PCURVE         0.000000    42.000000   ;
+ PCURVE        25.000000    35.000000   ;
+ PCURVE        50.000000    21.000000   ;
+
+
+[CONTROLS]
+
+[RULES]
+
+[ENERGY]
+GLOBAL PRICE           0.0000
+
+[EMITTERS]
+;ID        Flow coefficient
+
+[QUALITY]
+
+[SOURCES]
+;Node      Type       Quality    Pattern   
+TP         SETPOINT   1.1        CL_DOSE   
+
+[REACTIONS]
+;Type           Pipe/Tank               Coefficient
+
+ ORDER BULK 1
+ ORDER TANK 1
+ ORDER WALL 1
+ GLOBAL BULK -0.5000   
+ GLOBAL WALL 0.0000    
+
+[MIXING]
+;Tank ID             Model Fraction
+
+[TIMES]
+DURATION             48:00:00
+HYDRAULIC TIMESTEP   00:05:00
+QUALITY TIMESTEP     00:05:00
+PATTERN TIMESTEP     01:00:00
+PATTERN START        00:00:00
+REPORT TIMESTEP      01:00:00
+REPORT START         00:00:00
+START CLOCKTIME      00:00:00 AM
+RULE TIMESTEP        00:06:00
+STATISTIC            NONE      
+
+[REPORT]
+
+[OPTIONS]
+UNITS                LPS                 
+HEADLOSS             H-W                 
+SPECIFIC GRAVITY     1
+VISCOSITY            1
+TRIALS               200
+ACCURACY             0.001
+CHECKFREQ            2
+MAXCHECK             10
+UNBALANCED           STOP                
+PATTERN              1                   
+DEMAND MULTIPLIER    1
+EMITTER EXPONENT     0.5
+QUALITY              CHEMICAL mg/L
+DIFFUSIVITY          1
+TOLERANCE            0.01
+
+[COORDINATES]
+;Node      X-Coord    Y-Coord   
+WELLFIELD           0.000000000        500.000000000
+TP                150.000000000        500.000000000
+A1                400.000000000        500.000000000
+A2                800.000000000        500.000000000
+A3               1200.000000000        500.000000000
+A4               1600.000000000        500.000000000
+B1                800.000000000        900.000000000
+B2               1200.000000000        900.000000000
+B3               1600.000000000        900.000000000
+C1                400.000000000        100.000000000
+C2                800.000000000        100.000000000
+C3               1200.000000000        100.000000000
+D1                400.000000000       -250.000000000
+D2               2000.000000000        100.000000000
+D3               2000.000000000        900.000000000
+E1                400.000000000        900.000000000
+E2                400.000000000       1250.000000000
+F1               1600.000000000        100.000000000
+F2               1600.000000000       -250.000000000
+F3               2000.000000000       -250.000000000
+J1                800.000000000       1300.000000000
+J2               1200.000000000       1300.000000000
+J3               2000.000000000        500.000000000
+J4               2350.000000000        500.000000000
+J5               2350.000000000        100.000000000
+J6               2350.000000000        900.000000000
+T1               2050.000000000        520.000000000
+
+[VERTICES]
+;Link      X-Coord    Y-Coord   
+
+[LABELS]
+
+[BACKDROP]
+UNITS    NONE
+
+[END]

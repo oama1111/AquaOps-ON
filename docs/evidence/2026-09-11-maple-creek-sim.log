@@ -1,0 +1,7 @@
+simulation: 49 hourly steps x 27 nodes
+pressure at junctions: min=26.5 m  max=38.3 m  (accept 25-60)
+chlorine all nodes:    min=0.00 mg/L max=1.10 mg/L  (accept 0-1.1)
+tank T1 level:         min=7.75 m  max=8.84 m  (accept 2-12)
+chlorine at final hour: TP=1.10  A1(SP01)=1.09  D1(SP11)=1.03  E2(SP15)=1.03  F3(SP18)=0.89 mg/L
+VALIDATION PASSED
+exported chlorine series for 18 sampling points -> data/networks/maple_creek_chlorine_48h.csv
