@@ -1,0 +1,36 @@
+# AquaOps ON — application scaffold smoke test
+# Date: 2026-09-15
+# Purpose: prove the app/ + modules/ skeleton (Unit 3 Q2 folder organisation)
+#          imports and serves before any Unit 4 implementation lands.
+# Command: .venv/bin/python -c "<see below>"  (Python 3.12.14, fastapi 0.141.1)
+
+import app.schemas as s
+print('schemas exported:', len(s.__all__))
+import modules.m1_ingest, modules.m2_detect, modules.m3_schedule
+import modules.m4_rules, modules.m5_dashboard, modules.m6_eval
+print('modules M1-M6: import OK')
+from app.main import app
+print('app title:', app.title, '| version:', app.version)
+
+from fastapi.testclient import TestClient
+c = TestClient(app)
+r = c.get('/health')
+print('GET /health ->', r.status_code, r.json())
+spec = c.get('/openapi.json').json()
+print('openapi version:', spec['info']['version'])
+print('paths:', sorted(spec['paths']))
+
+--- observed output ---
+schemas exported: 28
+modules M1-M6: import OK
+app title: AquaOps ON | version: 0.1.0
+GET /health -> 200 {'status': 'ok', 'version': '0.1.0'}
+openapi version: 0.1.0
+paths: ['/health']
+
+# Note: components/schemas is empty at this commit — the 28 contract models in
+# app/schemas/ are not yet referenced by any route. Module routers mount in
+# Unit 4 (docs/architecture.md §7), at which point the OpenAPI document becomes
+# the API-spec screenshot required for later units.
+# Note: starlette warns that httpx is deprecated for TestClient in favour of
+# httpx2 — pin at Unit 4 when the CI workflow is written.
