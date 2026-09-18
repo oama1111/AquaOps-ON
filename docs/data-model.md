@@ -9,7 +9,7 @@ profile for multi-town deployments. All timestamps UTC ISO-8601.
 ```
 WATER_SYSTEM 1───* SAMPLING_POINT 1───* CHLORINE_READING
       │                    │                    │
-      │                    │                    └──* ANOMALY_ALERT *───1 ALERT_REASON
+      │                    │                    └──* ANOMALY_ALERT
       │                    │
       │                    └──* REQUIRED_TASK *───1 REG_RULE  (from rules/oreg170.yaml)
       │                              │
@@ -53,6 +53,18 @@ EVAL_RUN 1───* EVAL_METRIC   (M6 frozen-metric evaluation history)
 | source | enum | `lab_csv` \| `api` \| `manual` \| `simulation` |
 | upload_id | FK → lab_result_upload | provenance, nullable |
 | UNIQUE(sampling_point_id, measured_at) | | idempotent ingest |
+
+### lab_result_upload
+One row per ingest batch — the provenance record that makes a reading
+attributable and a replay auditable.
+| column | type | notes |
+|--------|------|-------|
+| id | PK | `upload_id` returned in the IngestReceipt |
+| system_id | FK | |
+| filename | text | original file name |
+| received_at | ts | |
+| sha256 | text | content hash; a replay of the same file is detectable |
+| rows_total / rows_accepted / rows_rejected | int | ingest receipt figures |
 
 ### reg_rule
 Mirror of `rules/oreg170.yaml` after load — kept in DB so a schedule run is
@@ -98,6 +110,11 @@ Maple Creek: 2 vehicles, 1.5 FTE.
 | reason_codes | JSON array | e.g. `["ewma_shift_up","trend_to_limit"]` |
 | context | JSON | EWMA z, IF score, last reading, threshold |
 | acknowledged_by / at | FK/ts | operator workflow |
+
+`reason_codes` is a controlled vocabulary enforced in code
+(`ReasonCode` in `app/schemas/enums.py`, mirrored from docs/api-spec.md §2),
+not a join table — the set is small, fixed by the two models in M2, and the
+UI is required to render the codes verbatim.
 
 ### eval_run / eval_metric
 M6 history: run id, git SHA, dataset descriptor, then (metric_name, value,
