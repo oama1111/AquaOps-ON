@@ -1,2 +1,97 @@
-# AquaOps-ON
-A Compliance Scheduling and Water-Quality Early-Warning Platform for Operators of Small Ontario Drinking Water Systems
+# AquaOps ON
+
+A compliance-scheduling and water-quality early-warning platform for operators of
+small Ontario drinking water systems (fewer than 10,000 people served).
+
+Small systems are typically run by one or two certified operators who must satisfy
+the sampling and monitoring duties of **O. Reg. 170/03** while also doing all other
+field work. Sampling windows get missed, and decaying free-chlorine residuals are
+often discovered only when laboratory results return days later. AquaOps ON turns
+regulatory obligations and chlorine trends into an executable daily work plan.
+
+> **Decision support only.** Every output is advisory, explainable, and subordinate
+> to licensed operator judgment. The platform does not determine compliance and is
+> not legal proof of compliance.
+
+## Status
+
+| Stage | State |
+| --- | --- |
+| Unit 1 — literature survey and problem definition | complete |
+| Unit 2 — proposal, scope, frozen success criteria | complete |
+| Unit 3 — architecture, data model, API spec, evaluation baseline | complete |
+| Unit 3 — implementation baseline (`app/`, `modules/`, `tests`) | scaffolded (typed interfaces, no logic yet) |
+| Units 4–8 — implementation, tuning, evaluation, reporting | in progress |
+
+The six module files in `modules/` define the interfaces and docstrings that the
+Unit 3 design specifies; their bodies raise `NotImplementedError` until Units 4–6.
+The FastAPI core in `app/main.py` runs today and serves `GET /health`.
+
+## Repository layout
+
+| Path | Contents |
+| --- | --- |
+| `app/` | FastAPI application core and the `/api/v1` Pydantic contract (`app/schemas/`) |
+| `modules/` | M1–M6: ingestion, anomaly detection, scheduler, rule engine, dashboard, evaluation harness |
+| `tests/` | pytest suite, populated alongside each module |
+| `docs/` | living design documents: `architecture.md`, `data-model.md`, `api-spec.md` |
+| `docs/diagrams/` | architecture and entity-relationship diagrams (script-generated) |
+| `docs/evidence/` | dated, reproducible evidence: simulation logs, validation runs, smoke tests |
+| `data/networks/` | committed EPANET case network, sampling-point registry, 48 h chlorine ground truth |
+| `rules/` | `oreg170.yaml` — regulatory sampling rules as versioned data |
+| `examples/` | reproducible scripts: build the case network, validate it, render the diagrams |
+
+Large raw datasets are deliberately not committed; see `data/README.md` for
+provenance and download instructions.
+
+## Branching model
+
+| Branch | Role |
+| --- | --- |
+| `main` | Last reviewed design milestone. Only receives reviewed pull requests. |
+| `development` | Long-lived integration branch for ongoing work. |
+| `feature/*` | Short-lived branches for one unit of work, merged by pull request. |
+
+Pull requests are the review record: [#6](https://github.com/oama1111/AquaOps-ON/pull/6)
+merged the Unit 2–3 design documents into `main`;
+[#7](https://github.com/oama1111/AquaOps-ON/pull/7) merged the implementation
+baseline into `development`. Commit messages follow a `type(scope):` convention
+(`docs(u3):`, `feat(app):`, `data:`, `chore:`) and state both what changed and
+why, so the history reads as a project narrative. Course milestones are
+snapshotted with git tags `u1` … `u8`; evaluation runs record the git SHA they
+were produced from.
+
+## Reproducing the case data
+
+The case system is a fictional but parameter-realistic Ontario town — Township of
+Maple Creek, population 4,800, 25 nodes, 18 sampling points (7 of them dead ends),
+two vehicles, 1.5 operator FTE.
+
+```bash
+python -m venv .venv && ./.venv/bin/pip install -r requirements.txt
+
+# Build the network and export 48 h of chlorine ground truth
+./.venv/bin/python examples/build_maple_creek.py
+
+# Validate it against physical plausibility bands (exits non-zero on violation)
+./.venv/bin/python examples/validate_maple_creek.py
+
+# Re-render docs/diagrams/architecture.png and erd.png
+./.venv/bin/python examples/render_design_diagrams.py
+```
+
+Ground truth is produced offline with WNTR/EPANET simulation. This is a design
+decision, not a convenience: connecting a student project to live SCADA/PLC
+infrastructure would widen the attack surface of critical infrastructure for no
+benefit a one-way file import cannot provide.
+
+## Documentation
+
+- [`docs/architecture.md`](docs/architecture.md) — context, module map, container view, ADR log
+- [`docs/data-model.md`](docs/data-model.md) — 13 entities, integrity rules, case-data mapping
+- [`docs/api-spec.md`](docs/api-spec.md) — `/api/v1` endpoint contract
+- [`docs/README.md`](docs/README.md) — index of design documents and evidence
+
+## License
+
+Apache License 2.0 — see [`LICENSE`](LICENSE).
