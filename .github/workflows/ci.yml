@@ -34,13 +34,15 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      # Only the shallow runtime dependencies: the simulation stack (wntr,
-      # scikit-learn) belongs to the case-data job, so this one stays quick.
-      # TODO(Unit 4): pin these once the project grows a lockfile.
+      # Everything the application imports, minus the simulation stack (wntr,
+      # pandas, psycopg2) that only the case-data job needs. Keeping this list
+      # short is what keeps the feedback loop inside a few minutes.
+      # TODO(Unit 5): pin these once the project grows a lockfile.
       - name: Install fast-job dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install fastapi pydantic sqlalchemy httpx pytest pytest-cov ruff mypy
+          pip install fastapi pydantic sqlalchemy jinja2 PyYAML python-multipart \
+                      numpy scikit-learn httpx pytest pytest-cov ruff mypy
 
       - name: Lint (ruff)
         run: ruff check .
