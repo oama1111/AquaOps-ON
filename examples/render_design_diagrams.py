@@ -5,16 +5,21 @@ Outputs:
 - docs/diagrams/erd.png           (data model overview)
 """
 from pathlib import Path
+
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs/diagrams"
 OUT.mkdir(parents=True, exist_ok=True)
 
-C_APP = "#1f77b4"; C_MOD = "#e8f1fb"; C_DATA = "#e8f7e8"; C_EXT = "#f7eee8"
+C_APP = "#1f77b4"
+C_MOD = "#e8f1fb"
+C_DATA = "#e8f7e8"
+C_EXT = "#f7eee8"
 
 
 def box(ax, x, y, w, h, label, fc, fontsize=9, ec="#333333", weight="normal", tc="black"):
@@ -35,7 +40,9 @@ def arrow(ax, x1, y1, x2, y2, label="", dashed=False, fs=7.5):
 
 # ---------------------------------------------------------------- architecture
 fig, ax = plt.subplots(figsize=(12, 8))
-ax.set_xlim(0, 12); ax.set_ylim(0, 8); ax.axis("off")
+ax.set_xlim(0, 12)
+ax.set_ylim(0, 8)
+ax.axis("off")
 ax.set_title("AquaOps ON — container & module view (Unit 3 design)", fontsize=13, pad=14)
 
 box(ax, 0.3, 5.6, 1.9, 1.0, "Operator\n(browser)", C_EXT, weight="bold")
@@ -82,7 +89,9 @@ plt.close(fig)
 
 # ------------------------------------------------------------------------- ERD
 fig, ax = plt.subplots(figsize=(12, 8))
-ax.set_xlim(0, 12); ax.set_ylim(0, 8); ax.axis("off")
+ax.set_xlim(0, 12)
+ax.set_ylim(0, 8)
+ax.axis("off")
 ax.set_title("AquaOps ON — data model overview (Unit 3 design)", fontsize=13, pad=14)
 
 ent = [

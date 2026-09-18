@@ -1,0 +1,85 @@
+name: CI
+
+# Continuous integration for AquaOps ON.
+#
+# Two jobs, deliberately split by feedback speed:
+#   quality    - lint, type check, and the unit/contract suite with the C6
+#                coverage gate. Minutes, no simulation dependencies.
+#   case-data  - rebuild the Maple Creek case network and re-run the physical
+#                plausibility validator, which exits non-zero on violation.
+#
+# The split is the practice DORA describes: keep the fast tests fast enough to
+# run on every commit, and move the slow validation to its own stage.
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, types, and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # Only the shallow runtime dependencies: the simulation stack (wntr,
+      # scikit-learn) belongs to the case-data job, so this one stays quick.
+      # TODO(Unit 4): pin these once the project grows a lockfile.
+      - name: Install fast-job dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi pydantic sqlalchemy httpx pytest pytest-cov ruff mypy
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Type check (mypy)
+        run: mypy app modules --ignore-missing-imports
+
+      # C6 in the frozen success criteria is "test coverage >= 70% and a
+      # reproducible deployment". The pipeline enforces it so that the
+      # criterion is a gate rather than an intention.
+      - name: Tests with the C6 coverage gate
+        run: pytest --cov=app --cov=modules --cov-report=term-missing --cov-fail-under=70
+
+  case-data:
+    name: Rebuild and validate the case network
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install simulation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Rebuild the Maple Creek case network
+        run: python examples/build_maple_creek.py
+
+      - name: Validate physical plausibility (exits non-zero on violation)
+        run: python examples/validate_maple_creek.py
+
+      - name: Upload the validation log as build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: maple-creek-validation
+          path: docs/evidence/
+          if-no-files-found: warn

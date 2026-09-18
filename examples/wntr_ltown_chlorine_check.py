@@ -5,10 +5,10 @@ Outputs (committed as evidence):
 - docs/evidence/2026-09-03-wntr-ltown-chlorine.png  (chlorine time series, sample nodes)
 - docs/evidence/2026-09-03-wntr-ltown-check.log    (run summary numbers)
 """
-from pathlib import Path
 import datetime
+from pathlib import Path
+
 import wntr
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 INP = ROOT / "data/raw/battledim/L-TOWN.inp"
@@ -60,8 +60,10 @@ for n, v in lowest.items():
 
 # plot a handful of nodes across the network
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
 fig, ax = plt.subplots(figsize=(9, 4.5))
 pick = list(q.mean().sort_values().index[[0, len(junc)//4, len(junc)//2, 3*len(junc)//4, -1]])
 for n in pick:

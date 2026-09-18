@@ -1,0 +1,27 @@
+# Ruff configuration for AquaOps ON.
+#
+# The rule set is deliberately narrow: real errors, import hygiene, and
+# pyupgrade only. The CI job fails on any finding, so the set is pinned here
+# rather than left to whatever default the installed Ruff version happens to
+# ship with.
+
+line-length = 100
+target-version = "py312"
+
+[lint]
+select = [
+    "E4",  # pycodestyle: import errors
+    "E7",  # pycodestyle: statement errors
+    "E9",  # pycodestyle: runtime errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+]
+
+[lint.per-file-ignores]
+# Example scripts are run top-to-bottom as documentation of how the case data
+# was produced; keep them readable rather than maximally modernised.
+#   UP   - do not modernise the committed evidence-generating scripts
+#   E402 - `matplotlib.use("Agg")` must run before `pyplot` is imported, so that
+#          import deliberately does not sit at the top of the file
+"examples/*" = ["UP", "E402"]

@@ -6,7 +6,12 @@ __pycache__/
 venv/
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
+
+# Tool caches (CI runs the same tools; nothing here is a build input)
+.mypy_cache/
+.ruff_cache/
 
 # Data (large files stay out of git; keep data/README.md)
 data/raw/
