@@ -1,5 +1,7 @@
 # AquaOps ON
 
+[![CI](https://github.com/oama1111/AquaOps-ON/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/oama1111/AquaOps-ON/actions/workflows/ci.yml)
+
 A compliance-scheduling and water-quality early-warning platform for operators of
 small Ontario drinking water systems (fewer than 10,000 people served).
 
@@ -60,6 +62,21 @@ baseline into `development`. Commit messages follow a `type(scope):` convention
 why, so the history reads as a project narrative. Course milestones are
 snapshotted with git tags `u1` … `u8`; evaluation runs record the git SHA they
 were produced from.
+
+## Continuous integration
+
+Every push and pull request runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml),
+split into two jobs by feedback speed:
+
+| Job | What it does | Why it is separate |
+| --- | --- | --- |
+| `quality` | `ruff` lint, `mypy` type check, and `pytest` with a **70% coverage floor** | Fast enough to run on every commit; needs no simulation stack |
+| `case-data` | Rebuilds the Maple Creek network and re-runs the plausibility validator, which exits non-zero on violation, then uploads the log as a build artefact | Slow, so it must not gate the fast feedback loop |
+
+The coverage floor is not arbitrary: **C6** in the project's frozen success criteria
+is "test coverage ≥ 70% and a reproducible deployment", so the pipeline turns that
+criterion into a gate that a machine enforces rather than an intention a developer
+remembers.
 
 ## Reproducing the case data
 
