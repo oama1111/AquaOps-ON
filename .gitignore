@@ -13,6 +13,10 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
+# Local database (SQLite deployment profile; rebuild with examples/seed_demo.py)
+*.db
+*.sqlite3
+
 # Data (large files stay out of git; keep data/README.md)
 data/raw/
 data/sim/

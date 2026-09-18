@@ -1,0 +1,39 @@
+<h2>This week's duty list{% if plan %} — plan {{ plan.id[:8] }}{% endif %}</h2>
+{% if plan %}
+<div class="totals">
+  <div>Planned stops<strong>{{ plan.stops | length }}</strong></div>
+  <div>Total distance<strong>{{ plan.total_km }} km</strong></div>
+  <div>Solver time<strong>{{ plan.solver_ms }} ms</strong></div>
+  <div>Status<strong>{{ plan.status }}</strong></div>
+</div>
+{% endif %}
+{% if not tasks %}
+  <p class="empty">No required tasks for this week. Every schedulable rule is either
+    inert (pending legal verification) or not a hard constraint.</p>
+{% endif %}
+{% if tasks %}
+<table>
+  <thead>
+    <tr>
+      <th>Point</th>
+      <th>Rule</th>
+      <th>Regulatory window closes</th>
+      <th>Status</th>
+      <th>Vehicle</th>
+      <th>ETA</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for task in tasks %}
+    <tr>
+      <td><strong>{{ task.sampling_point_id }}</strong></td>
+      <td class="meta">{{ task.rule_id }}</td>
+      <td>{{ task.window_end }}</td>
+      <td><span class="chip">{{ task.status }}</span></td>
+      <td>{{ stops_by_task[task.id].vehicle_id if task.id in stops_by_task else "—" }}</td>
+      <td>{{ stops_by_task[task.id].eta if task.id in stops_by_task else "—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}

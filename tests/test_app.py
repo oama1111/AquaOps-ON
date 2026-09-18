@@ -26,10 +26,13 @@ MODULES = [
     "modules.m6_eval",
 ]
 
+DEMO_CSV = Path(__file__).resolve().parents[1] / "examples" / "demo_lab_results.csv"
 
-@pytest.fixture(scope="module")
-def client() -> TestClient:
-    return TestClient(app)
+
+# The `client` fixture comes from conftest.py: it points the application at a
+# fresh temporary database per test, so these tests never depend on whatever
+# developer database happens to be sitting in the working tree (and never fail
+# because that file predates a schema change).
 
 
 def test_health_endpoint_returns_ok(client: TestClient) -> None:
@@ -63,19 +66,37 @@ def test_modules_m1_to_m6_are_importable(module_name: str) -> None:
     assert importlib.import_module(module_name) is not None
 
 
-def test_unimplemented_module_entry_points_fail_loudly() -> None:
-    """Until Units 4-6 land, a module body must raise rather than return a stub.
+def test_api_surface_matches_the_design_document(client: TestClient) -> None:
+    """Every endpoint group named in docs/api-spec.md must actually be mounted."""
+    paths = set(client.get("/openapi.json").json()["paths"])
+    for expected in [
+        "/api/v1/systems/{system_id}",
+        "/api/v1/systems/{system_id}/sampling-points",
+        "/api/v1/systems/{system_id}/ingest/lab-csv",
+        "/api/v1/readings",
+        "/api/v1/alerts",
+        "/api/v1/alerts/{alert_id}/ack",
+        "/api/v1/detect/run",
+        "/api/v1/rules",
+        "/api/v1/tasks/generate",
+        "/api/v1/tasks",
+        "/api/v1/plans",
+        "/api/v1/plans/{plan_id}",
+        "/api/v1/plans/{plan_id}/confirm",
+        "/api/v1/eval/run",
+    ]:
+        assert expected in paths, f"{expected} is specified but not mounted"
 
-    A silent wrong answer would be worse than an exception: the evaluation
-    harness would score it as a real result.
-    """
-    m2 = importlib.import_module("modules.m2_detect")
-    with pytest.raises(NotImplementedError):
-        m2.detect("SP15", [("2026-01-01T00:00:00Z", 0.4)])
+
+def test_dashboard_renders_the_decision_support_disclaimer(client: TestClient) -> None:
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "not legal proof of compliance" in response.text
+    assert "sampling points" in response.text
 
 
-def test_ingest_pipeline_is_idempotent_by_contract() -> None:
-    """M1 declares a uniqueness key on (sampling point, measured time)."""
-    m1 = importlib.import_module("modules.m1_ingest")
-    with pytest.raises(NotImplementedError):
-        m1.load_sampling_points("maple-creek", Path("unused.csv"))
+def test_demo_lab_export_is_present_and_well_formed() -> None:
+    """The demonstration dataset is part of the Unit 4 deliverable."""
+    assert DEMO_CSV.is_file()
+    header = DEMO_CSV.read_text(encoding="utf-8").splitlines()[0]
+    assert header == "sampling_point_id,measured_at,free_chlorine_mg_l"

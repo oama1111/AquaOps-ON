@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AquaOps ON — operator dashboard</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  <style>
+    :root { --ink:#12263a; --muted:#5b6b7c; --line:#d8e0e8; --accent:#1f77b4; --warn:#b8860b; --bad:#c0392b; --ok:#2e7d32; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:15px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color:var(--ink); background:#f6f8fa; }
+    header { background:#fff; border-bottom:1px solid var(--line); padding:18px 28px; }
+    h1 { margin:0; font-size:21px; }
+    .disclaimer { margin:6px 0 0; color:var(--warn); font-size:13px; }
+    main { padding:22px 28px 60px; display:grid; gap:22px; max-width:1180px; }
+    section { background:#fff; border:1px solid var(--line); border-radius:8px; padding:18px; }
+    section h2 { margin:0 0 12px; font-size:16px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th, td { text-align:left; padding:7px 9px; border-bottom:1px solid var(--line); }
+    th { color:var(--muted); font-weight:600; }
+    .chip { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; border:1px solid var(--line); }
+    .chip.dead_end { background:#fdecea; border-color:#f2b8b5; }
+    .chip.looped { background:#eaf2fb; border-color:#bcd6ef; }
+    .chip.alert { background:#fdecea; border-color:#f2b8b5; color:var(--bad); font-weight:600; }
+    .chip.clear { color:var(--ok); }
+    .alert { border:1px solid var(--line); border-left:4px solid var(--bad); border-radius:6px; padding:12px 14px; margin-bottom:12px; }
+    .alert.watch { border-left-color:var(--warn); }
+    .alert h3 { margin:0 0 6px; font-size:15px; }
+    .code { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; color:var(--bad); }
+    .meta { color:var(--muted); font-size:13px; }
+    .empty { color:var(--muted); font-style:italic; }
+    .totals { display:flex; gap:26px; margin:4px 0 14px; }
+    .totals div { font-size:13px; color:var(--muted); }
+    .totals strong { display:block; font-size:19px; color:var(--ink); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AquaOps ON — {{ system_name }}</h1>
+    <p class="disclaimer">Decision support only. Output is not legal proof of compliance;
+      licensed operator judgment prevails.</p>
+  </header>
+  <main>
+    <section id="network-status"
+             hx-get="/dash/network" hx-trigger="every 60s" hx-swap="innerHTML">
+      {{ network_html | safe }}
+    </section>
+    <section id="alert-inbox"
+             hx-get="/dash/alerts" hx-trigger="every 30s" hx-swap="innerHTML">
+      {{ alerts_html | safe }}
+    </section>
+    <section id="week-view"
+             hx-get="/dash/week" hx-trigger="every 120s" hx-swap="innerHTML">
+      {{ week_html | safe }}
+    </section>
+  </main>
+</body>
+</html>

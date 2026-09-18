@@ -1,0 +1,17 @@
+<h2>Alert inbox — {{ alerts | length }} open</h2>
+{% if not alerts %}
+  <p class="empty">No open alerts. The chlorine ensemble has not flagged any point.</p>
+{% endif %}
+{% for alert in alerts %}
+<div class="alert {{ alert.severity }}">
+  <h3>{{ alert.sampling_point_id }} — {{ alert.severity | upper }} ({{ alert.model }})</h3>
+  <p class="code">reason: {{ alert.reason_codes }}</p>
+  <p class="meta">
+    last reading {{ alert.last_reading_mg_l }} mg/L
+    · threshold {{ alert.threshold_mg_l }} mg/L
+    · ewma z {{ alert.ewma_z if alert.ewma_z is not none else "n/a" }}
+    · isolation score {{ alert.iforest_score if alert.iforest_score is not none else "n/a" }}
+    · raised {{ alert.raised_at }}
+  </p>
+</div>
+{% endfor %}
