@@ -64,7 +64,7 @@ were produced from.
 ## Reproducing the case data
 
 The case system is a fictional but parameter-realistic Ontario town — Township of
-Maple Creek, population 4,800, 25 nodes, 18 sampling points (7 of them dead ends),
+Maple Creek, population 4,800, 25 nodes, 18 sampling points (6 of them on dead-end spurs),
 two vehicles, 1.5 operator FTE.
 
 ```bash
