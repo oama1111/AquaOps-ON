@@ -60,17 +60,22 @@ box(ax, 10.0, 3.4, 1.7, 1.2, "SQLAlchemy\nSQLite / PG", C_DATA)
 box(ax, 10.0, 1.6, 1.7, 1.2, "WNTR/EPANET\nsim (offline)", C_DATA)
 box(ax, 3.0, 1.6, 6.4, 1.0, "data/networks: maple_creek.inp · points registry · 48 h chlorine ground truth", C_DATA)
 
-arrow(ax, 2.2, 6.1, 3.0, 6.9, "HTTP")
-arrow(ax, 2.2, 3.9, 3.0, 4.2)
-arrow(ax, 2.2, 1.7, 3.0, 2.0, "upload")
+arrow(ax, 2.2, 6.1, 3.0, 6.9, "HTMX\nrequests")
+arrow(ax, 2.2, 3.9, 3.0, 4.2, "nightly\nbatch")
+arrow(ax, 2.2, 1.7, 3.0, 2.0, "lab\nupload")
 arrow(ax, 6.2, 6.6, 6.2, 6.4)
 for x in (4.0, 6.2, 8.4):
     arrow(ax, x, 5.2, x, 4.8)
     arrow(ax, x, 3.6, x, 2.6, dashed=True)
-arrow(ax, 9.4, 5.8, 10.0, 5.8)
-arrow(ax, 9.4, 4.2, 10.0, 4.0)
+arrow(ax, 9.4, 5.8, 10.0, 5.8, "loads")
+arrow(ax, 9.4, 4.2, 10.0, 4.0, "persist")
 arrow(ax, 10.85, 2.8, 10.85, 3.4, dashed=True)
 ax.text(10.72, 3.05, "ground truth", fontsize=7.5, ha="right", color="#444444", style="italic")
+ax.text(3.0, 1.02, "Legend:    ──►  synchronous request/response          ┈┈►  scheduled or batch flow",
+        fontsize=8, style="italic", color="#444444")
+ax.text(3.0, 0.62, "All persistence is mediated by the owning module (M1–M6); ingest is idempotent on "
+                   "(sampling point, measured time).",
+        fontsize=8, style="italic", color="#444444")
 
 fig.savefig(OUT / "architecture.png", bbox_inches="tight", dpi=150)
 plt.close(fig)
