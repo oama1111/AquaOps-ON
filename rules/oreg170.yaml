@@ -1,8 +1,13 @@
 # O. Reg. 170/03 rules engine — sampling & operational check requirements
 #
-# ⚠️ 每一条规则都必须对照 CanLII 现行合并文本逐条核对后才能把 verified 改为 true：
+# IMPORTANT — draft data, not legal advice. Every rule must be checked clause by
+# clause against the current consolidated text on CanLII before its `verified`
+# flag is set to true:
 # https://www.canlii.org/en/on/laws/regu/o-reg-170-03/latest/o-reg-170-03.html
-# source_section 字段必须填写条文号；下面的频次仅为骨架示例，未经核对不得用于演示结论。
+# `source_section` must hold a real section number. The frequencies below are
+# skeleton placeholders and must not be used to draw conclusions while
+# `verified: false`. Unverified rules are inert: the rule engine does not turn
+# them into scheduled tasks.
 
 version: 0.1.0-draft
 regulation: "O. Reg. 170/03 (Drinking Water Systems), under the Safe Drinking Water Act, 2002"
