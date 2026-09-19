@@ -4,6 +4,8 @@ uvicorn[standard]
 sqlalchemy
 pydantic
 jinja2
+PyYAML            # M4 rule catalogue (rules/oreg170.yaml)
+python-multipart  # multipart/form-data for the laboratory CSV upload endpoint
 
 # Algorithms (Unit 5)
 pandas
@@ -18,3 +20,7 @@ psycopg2-binary
 pytest
 pytest-cov
 httpx  # FastAPI test client
+
+# Tooling enforced by CI (.github/workflows/ci.yml)
+ruff
+mypy

@@ -12,8 +12,8 @@ Outputs (committed as dated evidence for the design report):
 - docs/evidence/2026-09-11-maple-creek-sim.log       (numeric validation summary)
 - data/networks/maple_creek_chlorine_48h.csv         (SP01..SP18 hourly chlorine)
 """
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pandas as pd
 import wntr
@@ -72,6 +72,7 @@ log(f"exported chlorine series for {sp_q.shape[1]} sampling points -> data/netwo
 
 # ---- figures -----------------------------------------------------------------
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 

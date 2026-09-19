@@ -12,8 +12,9 @@ Outputs:
 - data/networks/maple_creek.inp        (committed — the canonical case network)
 - data/networks/maple_creek_points.csv (sampling-point registry used by M1/M3)
 """
-from pathlib import Path
 import csv
+from pathlib import Path
+
 import wntr
 
 ROOT = Path(__file__).resolve().parents[1]

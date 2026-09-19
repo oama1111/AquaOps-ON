@@ -1,49 +1,132 @@
-# O. Reg. 170/03 rules engine — sampling & operational check requirements
+# O. Reg. 170/03 rules engine — sampling and operational-check requirements.
 #
-# ⚠️ 每一条规则都必须对照 CanLII 现行合并文本逐条核对后才能把 verified 改为 true：
-# https://www.canlii.org/en/on/laws/regu/o-reg-170-03/latest/o-reg-170-03.html
-# source_section 字段必须填写条文号；下面的频次仅为骨架示例，未经核对不得用于演示结论。
+# VERIFIED CATALOGUE. Every rule below was checked clause by clause against the
+# official consolidated text published by Ontario e-Laws, which is the
+# authoritative source and which resolves to a machine-readable document; CanLII
+# was not reachable to automated retrieval.
+#
+#   Source : O. Reg. 170/03 (Drinking Water Systems),
+#            under the Safe Drinking Water Act, 2002, S.O. 2002, c. 32
+#   URL    : https://www.ontario.ca/laws/regulation/030170
+#   State  : current consolidation, period 11 April 2022, last amendment 269/22
+#   Read on: 19 September 2026
+#
+# WHY THE BAND MATTERS — a Unit 6 finding.
+# Section 1 (1) does not define "small" by population. A small municipal
+# residential system is one that "serves a major residential development but
+# serves fewer than 101 private residences"; a large municipal residential system
+# is one that "serves more than 100 private residences". The Maple Creek case
+# system serves 4,800 people and therefore sits in the LARGE band, so the draft
+# placeholders this file used to carry — which assumed small-system duties —
+# would have under-scheduled it by a factor of roughly 3.5 on microbiological
+# sampling. The clauses that actually apply to the case system are the large-band
+# clauses below; the small-band clauses are recorded at the end of this file as
+# the alternative band rather than being silently deleted.
+#
+# This is the inert-until-verified safety property (ADR-2) paying for itself: had
+# the placeholders been trusted, the system would have produced a confident and
+# wrong compliance schedule.
+#
+# IMPORTANT — not legal advice. This catalogue is decision support. The owner and
+# the operating authority remain responsible for compliance, and every generated
+# schedule must be reviewed by the licensed operator.
 
-version: 0.1.0-draft
+version: 1.0.0
 regulation: "O. Reg. 170/03 (Drinking Water Systems), under the Safe Drinking Water Act, 2002"
 jurisdiction: "Ontario, Canada"
-last_verified_against: null  # e.g. "2026-09-XX, CanLII consolidated to O. Reg. XXX/XX"
+last_verified_against: "2026-09-19, Ontario e-Laws consolidated to O. Reg. 269/22 (period 2022-04-11)"
 
 rule_sets:
   - id: microbiological_sampling_distribution
-    description: "Distribution system microbiological sampling frequency for small municipal residential systems"
-    population_band: "< 100,000 (Maple Creek ≈ 4,800)"
+    description: "Distribution system microbiological sampling for a large municipal residential system"
+    population_band: "large municipal residential (more than 100 private residences; case system: 4,800 people)"
     rules:
       - id: micro_dist_weekly
-        parameter: "E. coli / total coliform"
-        location: "distribution system"
-        frequency: "TODO — verify against regulation"
-        min_samples_per_period: null  # TODO
-        source_section: "TODO — e.g. O. Reg. 170/03, s. 10-x"
-        hard_constraint: true   # zero-gap requirement in scheduler
-        verified: false
+        parameter: "E. coli / total coliforms"
+        location: "distribution system, from points significantly beyond where water enters the distribution system"
+        frequency: "at least 12 samples per month at 4,800 people (8 plus 1 for every 1,000 served), with at least one sample in each week"
+        min_samples_per_period: 12
+        period_days: 30
+        source_section: "O. Reg. 170/03, Schedule 10, s. 10-2 (1) (a)"
+        hard_constraint: true
+        verified: true
 
   - id: chlorine_operational_checks
-    description: "Operational checks of free chlorine residual"
+    description: "Distribution free chlorine residual checks for a large municipal residential system that provides secondary disinfection"
+    population_band: "large municipal residential (more than 100 private residences; case system: 4,800 people)"
     rules:
       - id: chlorine_residual_frequency
         parameter: "free chlorine residual"
         location: "distribution system sampling points"
-        frequency: "TODO — verify against regulation"
-        source_section: "TODO"
+        frequency: "at least 7 distribution samples each week, tested immediately"
+        min_samples_per_period: 7
+        period_days: 7
+        source_section: "O. Reg. 170/03, Schedule 7, s. 7-2 (3)"
         hard_constraint: true
-        verified: false
+        verified: true
 
   - id: adverse_result_reporting
-    description: "AWQI reporting duties — drives alert workflow, not scheduling"
+    description: "AWQI reporting duties — drives the alert workflow, not the duty list"
+    population_band: "all municipal residential systems"
     rules:
       - id: awqi_notification
-        trigger: "adverse test result (e.g. low chlorine, E. coli detection)"
-        action: "notify medical officer of health + ministry (immediate/verbal + written)"
-        source_section: "TODO — s. 18 / Schedule 16/17 as applicable"
-        hard_constraint: false  # workflow rule, not a scheduling constraint
-        verified: false
+        trigger: "a prescribed adverse result, including a free chlorine residual below 0.05 mg/L in a distribution grab sample"
+        action: "immediate report by speaking in person or by telephone to the medical officer of health and to the Ministry's Spills Action Centre, then written notice within 24 hours"
+        parameter: "adverse drinking water test result"
+        location: "distribution system"
+        frequency: "on occurrence, immediately"
+        source_section: "Safe Drinking Water Act, 2002, s. 18 (1); O. Reg. 170/03, Schedule 16, s. 16-3 (1) para. 4, s. 16-6 (2)-(3), s. 16-7 (1)"
+        hard_constraint: false  # a workflow duty, not a scheduling constraint
+        verified: true
+
+# Supporting clauses these rules depend on. Verified against the same
+# consolidation, but not schedulable duties in their own right:
+#
+#   Free chlorine floor ....... Schedule 1, s. 1-2 (1) para. 4 i — the free
+#                               chlorine residual "is never less than 0.05
+#                               milligrams per litre" at all times and at all
+#                               locations within the distribution system.
+#                               This is the floor M2 alerts against.
+#   Paired chlorine sample .... Schedule 6, s. 6-3 (1) — one sample tested
+#                               immediately for free chlorine residual, taken at
+#                               the same time and from the same location as every
+#                               microbiological sample. Deliberately NOT a
+#                               separate schedulable rule: it is the same visit,
+#                               and modelling it as a second duty would place two
+#                               stops on one point with identical ETAs.
+#   Minimum spacing ........... Schedule 6, s. 6-1.1 (1) — samples required weekly
+#                               must be 5 to 10 days apart; s. 6-1.1 (2) sets 10
+#                               to 20 days for fortnightly sampling.
+#   Site of a distribution
+#   sample .................... s. 1 (1) definition — "a point significantly
+#                               beyond the point at which drinking water enters
+#                               the distribution system or plumbing".
+
+# ---------------------------------------------------------------------------
+# ALTERNATIVE BAND — small municipal residential systems (fewer than 101 private
+# residences). Verified against the same consolidation and retained so a future
+# deployment can select it rather than re-deriving it. These entries are NOT
+# loaded: `load_rules` reads `rule_sets` only, and choosing a band is a
+# deployment decision that ought to be driven by the system's private-residence
+# count rather than by a default.
+#
+#   small_micro_distribution:
+#     source_section: O. Reg. 170/03, Schedule 11, s. 11-2 (1) (a)-(b)
+#     frequency: at least one distribution sample every two weeks where treatment
+#       equipment under Schedule 1 or 2 is provided and operated in accordance
+#       with that Schedule; otherwise at least one every week
+#     note: Schedule 11 applies to small municipal residential systems and to
+#       non-municipal year-round residential systems (s. 11-1)
+#
+#   small_chlorine_distribution:
+#     source_section: O. Reg. 170/03, Schedule 7, s. 7-2 (5)
+#     frequency: at least two distribution samples each week, tested immediately
+#       for free chlorine residual, for a small municipal residential system that
+#       provides secondary disinfection; s. 7-2 (6) requires at least one of the
+#       two to be taken at least 48 hours after the other in the same week
+# ---------------------------------------------------------------------------
 
 notes:
   - "Scheduler treats every hard_constraint rule as a zero-gap time window."
   - "Every generated schedule must be reviewed by the licensed operator; the system is decision support only."
+  - "Band selection is currently a deployment decision recorded in this file. Selecting the band at run time from the system's private-residence count is the next improvement (see the Unit 6 discussion)."

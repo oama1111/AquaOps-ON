@@ -42,6 +42,22 @@ reproducible.
 - Deliberately skipped: the two 92 MB `.xlsx` SCADA workbooks (CSV equivalents downloaded instead).
 - Use: labelled benchmark for comparing the anomaly-detection channel against published methods.
 
+## Maple Creek case network (synthetic, committed)
+
+- Built by `examples/build_maple_creek.py`; validated by `examples/validate_maple_creek.py`.
+  Evidence: `docs/evidence/2026-09-11-maple-creek-sim.log` (48 h, VALIDATION PASSED).
+- 25 junctions, 30 pipes, one reservoir (treatment plant with chlorination), one elevated tank,
+  and 18 registered sampling points (`data/networks/maple_creek_points.csv`).
+- **`location_type` semantics.** A point is labelled `dead_end` when it sits on a dead-end spur —
+  a low-flow, high-water-age leg of the network — and `looped` otherwise. This is a water-age
+  classification, not a topological one: a spur can carry more than one sampling point, and
+  intermediate junctions along a spur are labelled `dead_end` as well. Of the 18 points, **6 are
+  `dead_end`** (B3, D1, D2, D3, E2, F3) and 12 are `looped`; only three of those six (D1, D3, F3)
+  are terminal degree-1 junctions. The count is asserted by `tests/test_case_data.py` so the
+  documentation cannot drift from the data again.
+- Hourly chlorine for all 18 points is exported to `maple_creek_chlorine_48h.csv` as synthetic
+  ground truth for M2 development and M6 evaluation.
+
 ## Field verification note
 
 Regulatory frequencies encoded in `rules/oreg170.yaml` must be verified line-by-line against
