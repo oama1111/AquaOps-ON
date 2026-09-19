@@ -34,15 +34,16 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      # Everything the application imports, minus the simulation stack (wntr,
-      # pandas, psycopg2) that only the case-data job needs. Keeping this list
-      # short is what keeps the feedback loop inside a few minutes.
-      # TODO(Unit 5): pin these once the project grows a lockfile.
+      # Everything the fast job imports, minus the simulation stack (wntr,
+      # pandas, psycopg2, matplotlib) that only the case-data job needs.
+      # scikit-learn pulls in scipy, so M2's second detector is covered without
+      # installing the whole simulation stack. Keeping this list short is what
+      # keeps the feedback loop inside a few minutes.
+      # TODO(Unit 6): replace this list with a lockfile once the stack is frozen.
       - name: Install fast-job dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install fastapi pydantic sqlalchemy jinja2 PyYAML python-multipart \
-                      numpy scikit-learn httpx pytest pytest-cov ruff mypy
+          pip install -r requirements.txt ruff mypy pytest pytest-cov httpx
 
       - name: Lint (ruff)
         run: ruff check .
@@ -54,6 +55,10 @@ jobs:
       # reproducible deployment". The pipeline enforces it so that the
       # criterion is a gate rather than an intention.
       - name: Tests with the C6 coverage gate
+        env:
+          # Keep Matplotlib's font cache inside the runner: a non-writable HOME
+          # makes the first import rebuild it and slows the suite unpredictably.
+          MPLCONFIGDIR: /tmp/mplcache
         run: pytest --cov=app --cov=modules --cov-report=term-missing --cov-fail-under=70
 
   case-data:

@@ -22,12 +22,23 @@ regulatory obligations and chlorine trends into an executable daily work plan.
 | Unit 1 — literature survey and problem definition | complete |
 | Unit 2 — proposal, scope, frozen success criteria | complete |
 | Unit 3 — architecture, data model, API spec, evaluation baseline | complete |
-| Unit 3 — implementation baseline (`app/`, `modules/`, `tests`) | scaffolded (typed interfaces, no logic yet) |
-| Units 4–8 — implementation, tuning, evaluation, reporting | in progress |
+| Unit 4 — implemented vertical slice, dashboard, CI pipeline | complete |
+| Unit 5 — unit testing of the critical modules, 95 % coverage | complete |
+| Units 6–8 — deployment, system testing, evaluation report, final demo | in progress |
 
-The six module files in `modules/` define the interfaces and docstrings that the
-Unit 3 design specifies; their bodies raise `NotImplementedError` until Units 4–6.
-The FastAPI core in `app/main.py` runs today and serves `GET /health`.
+All six modules in `modules/` are implemented and exercised by the test suite:
+M1 ingestion and registry, M2 the EWMA ∪ Isolation Forest detector, M3 the
+sweep + 2-opt planner, M4 the O. Reg. 170/03 rule engine, M5 the dashboard, and
+M6 the evaluation harness. `pytest` reports **87 passed** and **95 % statement
+coverage** against the 70 % floor that criterion C6 sets. Two unit-test
+categories are declared in `pytest.ini` and can be run separately:
+
+```bash
+pytest -m unit_whitebox   # 21 tests against named internal helpers and branches
+pytest -m unit_blackbox   # 18 tests against the public module contracts
+```
+
+The FastAPI core in `app/main.py` serves `GET /health` and the `/api/v1` contract.
 
 ## Repository layout
 
