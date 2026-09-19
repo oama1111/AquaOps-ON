@@ -6,6 +6,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db import get_session
@@ -75,7 +76,18 @@ def add_reading(
     free_chlorine_mg_l: float,
     session: Session = Depends(get_session),
 ) -> ReadingOut:
-    """Record a single reading taken by the operator in the field."""
+    """Record a single reading taken by the operator in the field.
+
+    The (sampling point, measured time) pair is the identity of a reading, and
+    the CSV ingest path already treats a repeat of it as a duplicate rather than
+    an error. Unit 6 integration testing found that this endpoint did not: a
+    second POST for the same point and minute — the field app retrying after a
+    dropped connection, or an operator typing a value the laboratory had already
+    reported — reached the database and returned a 500 from the resulting
+    ``IntegrityError``. A crash on a foreseeable input is a defect, so the
+    conflict is now translated into an explicit 409 that names the key, which
+    keeps the API's error behaviour as truthful as its success behaviour.
+    """
     row = ChlorineReading(
         sampling_point_id=sampling_point_id,
         measured_at=measured_at,
@@ -83,7 +95,19 @@ def add_reading(
         source=ReadingSource.MANUAL.value,
     )
     session.add(row)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as error:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"a reading for point {sampling_point_id} at "
+                f"{measured_at.isoformat()} already exists; readings are keyed on "
+                "(sampling point, measured time) so re-sending cannot duplicate a "
+                "compliance record"
+            ),
+        ) from error
     return ReadingOut(
         id=str(row.id),
         sampling_point_id=row.sampling_point_id,

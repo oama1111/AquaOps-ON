@@ -32,10 +32,20 @@ def run_evaluation_now(
     system_id: str = "maple-creek",
     git_sha: str = Query(default="unknown"),
     coverage: float = Query(default=0.0, ge=0.0, le=1.0),
+    api_p95_ms: float = Query(
+        default=0.0,
+        ge=0.0,
+        description=(
+            "measured p95 API latency in ms, supplied by the Unit 6 benchmark so "
+            "that C5 is evaluated from a real measurement rather than assumed"
+        ),
+    ),
     session: Session = Depends(get_session),
 ) -> EvalRunOut:
     """Replay the case dataset through M2/M3 and store the frozen verdicts."""
-    row = run(session, system_id, week, git_sha, coverage=coverage)
+    row = run(
+        session, system_id, week, git_sha, coverage=coverage, api_p95_ms=api_p95_ms
+    )
     return _run_out(session, row)
 
 

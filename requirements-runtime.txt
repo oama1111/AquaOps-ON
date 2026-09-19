@@ -1,0 +1,32 @@
+# Runtime dependencies — everything needed to SERVE AquaOps ON.
+#
+# This is deliberately not the same list as requirements.txt. The Unit 6
+# benchmark measured the peak import footprint of each layer and found that the
+# offline simulation stack costs more than twice what the application itself
+# does:
+#
+#   bare interpreter ................................ ~15 MiB
+#   interpreter + app.main (the deployable unit) .... ~76 MiB
+#   interpreter + wntr, pandas, sklearn ............. ~190 MiB
+#
+# wntr and pandas are only used to BUILD the case data
+# (examples/build_maple_creek.py, examples/validate_maple_creek.py), which is an
+# offline activity that produces a committed CSV. They are therefore not in the
+# serving image. scikit-learn IS required at runtime, because M2's Isolation
+# Forest detector imports it inside iforest_scores().
+#
+# tests/test_runtime_dependencies.py enforces this list: it imports app.main in a
+# subprocess with pandas, wntr and matplotlib blocked, so a future edit that
+# reaches for the simulation stack in a request path fails the suite instead of
+# failing a container at start-up.
+
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+jinja2
+PyYAML            # M4 rule catalogue (rules/oreg170.yaml)
+python-multipart  # multipart/form-data for the laboratory CSV upload endpoint
+numpy
+scikit-learn      # M2 Isolation Forest
+psycopg2-binary   # PostgreSQL profile; unused in the SQLite deployment

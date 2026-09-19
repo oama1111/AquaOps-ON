@@ -14,6 +14,7 @@ default path never consults it.
 
 from __future__ import annotations
 
+import functools
 import uuid
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
@@ -34,8 +35,35 @@ TASK_NAMESPACE = uuid.UUID("6f9619ff-8b86-d011-b42d-00c04fc964ff")
 
 
 def load_rules(yaml_path: Path = RULES_PATH) -> list[RuleOut]:
-    """Flatten the rule catalogue; `verified: false` entries load as inert."""
-    document: dict[str, Any] = yaml.safe_load(Path(yaml_path).read_text(encoding="utf-8")) or {}
+    """Flatten the rule catalogue; `verified: false` entries load as inert.
+
+    The parsed catalogue is cached against the file's modification time, because
+    Unit 6 measurement found this function to be the whole cost of the slowest
+    endpoint: `GET /api/v1/rules`, `sync_rules` and `generate_week_tasks` each
+    re-read and re-parsed the YAML on every request, which made the rule
+    catalogue roughly ten times slower to serve than any other route. Keying the
+    cache on the mtime rather than caching unconditionally means an amended
+    regulation is still picked up on the next request, so the fix cannot serve a
+    stale schedule — which is the one thing this module must never do.
+    """
+    path = Path(yaml_path)
+    try:
+        stamp = path.stat().st_mtime_ns
+    except OSError:
+        stamp = -1
+    return list(_cached_rules(str(path), stamp))
+
+
+@functools.lru_cache(maxsize=8)
+def _cached_rules(path_text: str, _stamp: int) -> tuple[RuleOut, ...]:
+    """Parse once per (file, modification time).
+
+    Returns a tuple so the cached value cannot be mutated by a caller, and
+    `load_rules` hands out a fresh list around it.
+    """
+    document: dict[str, Any] = (
+        yaml.safe_load(Path(path_text).read_text(encoding="utf-8")) or {}
+    )
     rules: list[RuleOut] = []
     for rule_set in document.get("rule_sets", []):
         set_id = rule_set.get("id", "unnamed")
@@ -54,7 +82,7 @@ def load_rules(yaml_path: Path = RULES_PATH) -> list[RuleOut]:
                     inert=not verified,
                 )
             )
-    return rules
+    return tuple(rules)
 
 
 def week_bounds(week: str) -> tuple[datetime, datetime]:

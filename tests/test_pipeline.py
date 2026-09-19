@@ -136,20 +136,69 @@ def test_alert_payload_survives_the_round_trip_to_the_database(seeded: Session) 
 # --------------------------------------------------------------------- M4 ---
 
 
-def test_unverified_rules_are_inert_by_default() -> None:
+def test_shipped_rule_catalogue_is_verified_and_traceable() -> None:
+    """Unit 6 closed issue #4: no shipped rule may still be a placeholder.
+
+    The catalogue was authored as draft data with `verified: false` and `TODO`
+    source sections. It has now been checked clause by clause against the
+    Ontario e-Laws consolidation, so this test fails if a future edit
+    reintroduces an unverified or untraceable rule.
+    """
     rules = load_rules()
     assert rules, "the rule catalogue should not be empty"
-    assert all(rule.inert for rule in rules), "draft rules must load as inert"
+    assert all(rule.verified for rule in rules), "every shipped rule must be verified"
+    assert all(not rule.inert for rule in rules), "a verified rule is not inert"
+    for rule in rules:
+        assert "TODO" not in rule.source_section, f"{rule.id} has no real citation"
+        assert "O. Reg. 170/03" in rule.source_section or "Safe Drinking Water Act" in rule.source_section
+        assert "TODO" not in rule.frequency, f"{rule.id} has no real frequency"
+
+    # Two schedulable duties per point plus one workflow rule is what the case
+    # system's band implies, so the count is asserted rather than assumed.
+    schedulable = [rule for rule in rules if rule.hard_constraint]
+    assert len(schedulable) == 2
+    assert {rule.id for rule in schedulable} == {
+        "micro_dist_weekly",
+        "chlorine_residual_frequency",
+    }
+
+
+def test_unverified_rules_are_inert(tmp_path: Path) -> None:
+    """The inert-until-verified safety property survives the verification work.
+
+    Issue #4 is closed, so the property is now pinned against a synthetic draft
+    catalogue: if a future amendment arrives before it has been read against the
+    regulation, it must load, be visible, and generate nothing.
+    """
+    draft = tmp_path / "draft.yaml"
+    draft.write_text(
+        "version: test\n"
+        "rule_sets:\n"
+        "  - id: pending_amendment\n"
+        "    rules:\n"
+        "      - id: unverified_rule\n"
+        "        parameter: free chlorine residual\n"
+        "        location: distribution system\n"
+        "        frequency: TODO - verify against regulation\n"
+        "        source_section: TODO\n"
+        "        hard_constraint: true\n"
+        "        verified: false\n",
+        encoding="utf-8",
+    )
+
+    rules = load_rules(draft)
+    assert len(rules) == 1
+    assert rules[0].inert and not rules[0].verified
 
     points = load_sampling_points(CASE_SYSTEM_ID, POINTS_CSV)
     strict = generate_tasks(CASE_SYSTEM_ID, "2026-W38", rules, points)
     assert strict.generated == 0
-    assert strict.inert_rules_skipped >= 1
+    assert strict.inert_rules_skipped == 1
 
     preview = generate_tasks(
         CASE_SYSTEM_ID, "2026-W38", rules, points, include_unverified=True
     )
-    assert preview.generated > 0
+    assert preview.generated == len(points)
 
 
 # --------------------------------------------------------------------- M3 ---
@@ -306,16 +355,23 @@ def test_detect_then_acknowledge_over_http(client: TestClient) -> None:
     ).status_code == 404
 
 
-def test_task_generation_defaults_to_inert_rules(client: TestClient) -> None:
+def test_task_generation_expands_the_verified_catalogue(client: TestClient) -> None:
+    """The verified catalogue now produces duties on the default path.
+
+    Unit 5 asserted the opposite, because every rule was still a draft
+    placeholder. Unit 6 verified the clauses, so the strict path is the one that
+    generates: two schedulable rules over the 18 registered points.
+    """
     week = current_week()
     strict = client.post("/api/v1/tasks/generate", params={"week": week})
     assert strict.status_code == 201
-    assert strict.json()["generated"] == 0
+    assert strict.json()["generated"] == 36
+    assert strict.json()["inert_rules_skipped"] == 0
+    assert len(client.get("/api/v1/tasks", params={"week": week}).json()) == 36
 
-    draft = client.post(
-        "/api/v1/tasks/generate", params={"week": week, "include_draft": True}
-    )
-    assert draft.json()["generated"] == 36
+    # A second call is idempotent: the deterministic task ids already exist.
+    again = client.post("/api/v1/tasks/generate", params={"week": week})
+    assert again.json()["generated"] == 0
     assert len(client.get("/api/v1/tasks", params={"week": week}).json()) == 36
 
 
@@ -353,8 +409,10 @@ def test_registry_and_evaluation_endpoints(client: TestClient) -> None:
     assert len(points) == 18
 
     rules = client.get("/api/v1/rules").json()
-    assert rules and all(rule["inert"] for rule in rules)
-    assert client.get("/api/v1/rules", params={"verified": True}).json() == []
+    assert rules and all(rule["verified"] for rule in rules)
+    assert all(not rule["inert"] for rule in rules)
+    verified_only = client.get("/api/v1/rules", params={"verified": True}).json()
+    assert verified_only == rules
 
     assert client.get("/api/v1/systems/nope").status_code == 404
     assert client.get("/api/v1/ingest/nope").status_code == 404

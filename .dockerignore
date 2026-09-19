@@ -1,0 +1,52 @@
+# Build context exclusions.
+#
+# Two reasons a path is listed here. The first is size: caches, virtual
+# environments and the local SQLite file are large and rebuild reproducibly.
+# The second is correctness, and it is the more important one: the image must
+# not contain the simulation stack, the test suite, the raw datasets, or the
+# developer's database, because each of those either changes what the container
+# can do or leaks state into a deployment. Nüst et al. (2020) make the same
+# point from the reproducibility side — what is not copied cannot vary between
+# builds.
+
+# Version control and tooling metadata
+.git
+.gitignore
+.github
+.ruff_cache
+.mypy_cache
+.pytest_cache
+.coverage
+coverage.xml
+htmlcov
+ruff.toml
+pytest.ini
+
+# Python environments and bytecode
+.venv
+.venv.nosync
+venv
+__pycache__
+*.py[cod]
+*.egg-info
+
+# The local database and evidence: deployment state, never an image input
+*.db
+*.sqlite3
+docs/evidence
+temp.*
+
+# Raw and large data. data/networks/ is copied explicitly by the Dockerfile
+# because the application needs the case network and the 48 h ground truth.
+data/raw
+data/sim
+
+# Development-only trees that would re-introduce the simulation stack
+tests
+examples
+Unit*
+
+# Editors and OS
+.DS_Store
+.vscode
+.idea
