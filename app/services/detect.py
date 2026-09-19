@@ -43,7 +43,45 @@ def run_detection(
         series,
         threshold_mg_l=threshold_mg_l,
     )
+
+    # One open alert per point, refreshed rather than duplicated.
+    #
+    # Unit 6 integration testing found that a second pass over an unchanged
+    # series inserted a second identical row: `POST /detect/run` twice, or the
+    # nightly batch overlapping a manual pass, filled the operator's inbox with
+    # copies of one condition. That is not cosmetic. The C2 budget is "at most
+    # two false alarms per point per week", and an inbox that multiplies every
+    # alarm by the number of times the detector ran would breach that budget
+    # without a single extra false positive. The alert is therefore keyed on the
+    # point while it is unacknowledged: a new verdict updates the existing row
+    # with the latest scores and reason codes and leaves `raised_at` alone, so
+    # the operator still sees when the condition first appeared.
+    open_by_point = {
+        row.sampling_point_id: row
+        for row in session.execute(
+            select(AnomalyAlert).where(
+                AnomalyAlert.sampling_point_id == sampling_point_id,
+                AnomalyAlert.acknowledged_at.is_(None),
+            )
+        ).scalars()
+    }
+
+    raised = 0
+    refreshed = 0
     for alert in alerts:
+        existing = open_by_point.get(alert.sampling_point_id)
+        if existing is not None:
+            existing.model = alert.model.value
+            existing.severity = alert.severity.value
+            existing.last_reading_mg_l = alert.context.last_reading_mg_l
+            existing.threshold_mg_l = alert.context.threshold_mg_l
+            existing.ewma_z = alert.context.ewma_z
+            existing.iforest_score = alert.context.iforest_score
+            existing.reason_codes = ",".join(
+                code.value for code in alert.context.reason_codes
+            )
+            refreshed += 1
+            continue
         session.add(
             AnomalyAlert(
                 id=alert.id,
@@ -58,6 +96,7 @@ def run_detection(
                 reason_codes=",".join(code.value for code in alert.context.reason_codes),
             )
         )
+        raised += 1
     session.commit()
 
     first = datetime.fromisoformat(series[0][0]) if series else datetime.min
@@ -67,7 +106,8 @@ def run_detection(
         from_at=first,
         to_at=last,
         readings_evaluated=len(series),
-        alerts_raised=len(alerts),
+        alerts_raised=raised,
+        alerts_refreshed=refreshed,
     )
 
 

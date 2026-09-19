@@ -24,21 +24,39 @@ regulatory obligations and chlorine trends into an executable daily work plan.
 | Unit 3 — architecture, data model, API spec, evaluation baseline | complete |
 | Unit 4 — implemented vertical slice, dashboard, CI pipeline | complete |
 | Unit 5 — unit testing of the critical modules, 95 % coverage | complete |
-| Units 6–8 — deployment, system testing, evaluation report, final demo | in progress |
+| Unit 6 — system integration, performance evaluation, deployment plan | complete |
+| Units 7–8 — system test report, final documentation, demo | in progress |
 
 All six modules in `modules/` are implemented and exercised by the test suite:
 M1 ingestion and registry, M2 the EWMA ∪ Isolation Forest detector, M3 the
 sweep + 2-opt planner, M4 the O. Reg. 170/03 rule engine, M5 the dashboard, and
-M6 the evaluation harness. `pytest` reports **87 passed** and **95 % statement
+M6 the evaluation harness. `pytest` reports **91 passed** and **94 % statement
 coverage** against the 70 % floor that criterion C6 sets. Two unit-test
 categories are declared in `pytest.ini` and can be run separately:
 
 ```bash
-pytest -m unit_whitebox   # 21 tests against named internal helpers and branches
-pytest -m unit_blackbox   # 18 tests against the public module contracts
+pytest -m unit_whitebox   # tests against named internal helpers and branches
+pytest -m unit_blackbox   # tests against the public module contracts
 ```
 
-The FastAPI core in `app/main.py` serves `GET /health` and the `/api/v1` contract.
+The FastAPI core in `app/main.py` serves `GET /health`, the `/api/v1` contract
+and the operator dashboard. The regulation catalogue in `rules/oreg170.yaml` is
+now **fully verified** against the Ontario e-Laws consolidation of O. Reg. 170/03
+(last amendment 269/22): each rule carries a real section reference, and
+`tests/test_pipeline.py` fails if a placeholder is ever reintroduced.
+
+Unit 6 measured the assembled system rather than estimating it. Three hermetic
+scripts produce the evidence, each booting the deployable unit on a loopback port
+against a throwaway database:
+
+```bash
+python examples/unit6_integration.py   # 22-step end-to-end walk over real HTTP
+python examples/unit6_perf.py          # latency, throughput, memory, C1-C6
+python examples/unit6_ui.py            # heuristic usability review + screenshots
+```
+
+Their findings are summarised in [`docs/deployment.md`](docs/deployment.md),
+which is the deployment plan and the configuration record.
 
 ## Repository layout
 
@@ -47,12 +65,14 @@ The FastAPI core in `app/main.py` serves `GET /health` and the `/api/v1` contrac
 | `app/` | FastAPI application core and the `/api/v1` Pydantic contract (`app/schemas/`) |
 | `modules/` | M1–M6: ingestion, anomaly detection, scheduler, rule engine, dashboard, evaluation harness |
 | `tests/` | pytest suite, populated alongside each module |
-| `docs/` | living design documents: `architecture.md`, `data-model.md`, `api-spec.md` |
+| `docs/` | living design documents: `architecture.md`, `data-model.md`, `api-spec.md`, `deployment.md` |
 | `docs/diagrams/` | architecture and entity-relationship diagrams (script-generated) |
 | `docs/evidence/` | dated, reproducible evidence: simulation logs, validation runs, smoke tests |
+| `app/static/` | first-party front-end assets, currently the pinned htmx bundle (see its README) |
 | `data/networks/` | committed EPANET case network, sampling-point registry, 48 h chlorine ground truth |
-| `rules/` | `oreg170.yaml` — regulatory sampling rules as versioned data |
-| `examples/` | reproducible scripts: build the case network, validate it, render the diagrams |
+| `rules/` | `oreg170.yaml` — regulatory sampling rules as versioned, verified data |
+| `examples/` | reproducible scripts: build the case network, validate it, render diagrams, produce Unit 6 evidence |
+| `Dockerfile`, `docker-compose.yml` | the deployment image and the single-town compose profile |
 
 Large raw datasets are deliberately not committed; see `data/README.md` for
 provenance and download instructions.

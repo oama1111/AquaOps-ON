@@ -53,3 +53,7 @@ class DetectReport(BaseModel):
     to_at: datetime
     readings_evaluated: int
     alerts_raised: int
+    #: Alerts that already existed open for this point and were updated in place
+    #: rather than duplicated. Added in Unit 6 so a repeated detection pass is
+    #: auditable instead of silently multi-counting the operator's inbox.
+    alerts_refreshed: int = 0

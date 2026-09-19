@@ -66,6 +66,7 @@ def run(
     git_sha: str,
     *,
     coverage: float = 0.0,
+    api_p95_ms: float = 0.0,
     dataset: str = "maple-creek-48h",
 ) -> EvalRun:
     """Replay the case dataset through M2/M3 and store the frozen metric verdicts."""
@@ -97,6 +98,12 @@ def run(
         solver_ms=solver_ms,
         missed_windows=missed,
         coverage=coverage,
+        # C5 is a system-level property, so its value comes from the benchmark
+        # (`examples/unit6_perf.py`) instead of being guessed here. Unit 6
+        # closed this integration gap: `EvaluationInputs` declared the field
+        # from the start, but no caller supplied it, so C5 reported a hard zero
+        # on every stored run and could never pass.
+        api_p95_ms=api_p95_ms,
     )
     metrics = run_evaluation(inputs)
 

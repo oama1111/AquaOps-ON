@@ -1,0 +1,83 @@
+# AquaOps ON — single-town deployment profile.
+#
+#   docker compose up --build -d      start
+#   docker compose ps                 status, including the health probe
+#   docker compose logs -f aquaops    follow the application log
+#   docker compose down               stop (the volume keeps the data)
+#
+# This profile is the one the Unit 6 deployment plan selects for a single
+# municipal system: one host, one container, one volume, no orchestrator. The
+# PostgreSQL profile further down is commented out because it is the multi-town
+# path, and turning it on is a configuration change rather than a code change —
+# which is the point of keeping the database URL in the environment.
+
+services:
+  aquaops:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aquaops-on:u6
+    restart: unless-stopped
+    ports:
+      # Bound to loopback by default. Put a TLS-terminating reverse proxy in
+      # front of this for anything reachable off the host, because compliance
+      # records and operator notes travel over it.
+      - "127.0.0.1:8000:8000"
+    environment:
+      # Twelve-factor config: everything that differs between installations is
+      # here, and nothing that differs is in the image.
+      AQUAOPS_DB_URL: sqlite:////data/aquaops.db
+      AQUAOPS_EVIDENCE_DIR: /data/evidence
+      # AQUAOPS_AUTH_TOKEN: set-in-the-deployment-secret-store
+    volumes:
+      # Named volume rather than a bind mount: the compliance database is the
+      # record of what the system told the operator to do, so it must outlive
+      # any single container and be backed up as one file.
+      - aquaops-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    deploy:
+      resources:
+        limits:
+          # The Unit 6 benchmark measured a peak resident set of about 200 MiB
+          # for the serving process under load, so 512 MiB leaves headroom on a
+          # small municipal host without letting a leak go unnoticed.
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  aquaops-data:
+    name: aquaops-data
+
+# --------------------------------------------------------------------------
+# Multi-town profile (not enabled). The same image runs on PostgreSQL by
+# changing the connection string and adding the database service; nothing above
+# app/db.py knows which engine is in use, which is how NFR "Scalability" was
+# designed to be satisfied.
+#
+#  postgres:
+#    image: postgres:16-alpine
+#    restart: unless-stopped
+#    environment:
+#      POSTGRES_DB: aquaops
+#      POSTGRES_USER: aquaops
+#      POSTGRES_PASSWORD: ${AQUAOPS_DB_PASSWORD:?set AQUAOPS_DB_PASSWORD}
+#    volumes:
+#      - aquaops-pgdata:/var/lib/postgresql/data
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready -U aquaops -d aquaops"]
+#      interval: 10s
+#      retries: 5
+#
+# then set on the aquaops service:
+#      AQUAOPS_DB_URL: postgresql+psycopg2://aquaops:${AQUAOPS_DB_PASSWORD}@postgres:5432/aquaops
+#      AQUAOPS_WORKERS: "4"
+# --------------------------------------------------------------------------
