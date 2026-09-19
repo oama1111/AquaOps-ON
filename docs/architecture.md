@@ -26,7 +26,7 @@ every alert and schedule is advisory and traceable to a rule or model output.
 |----|--------|----------------|----------|
 | M1 | Ingestion & registry | Load network model, sampling-point registry, lab results, DWSP reference data | pandas, Pydantic |
 | M2 | Chlorine anomaly detection | EWMA control chart + Isolation Forest ensemble per sampling point; explainable alert payload | scikit-learn, numpy |
-| M3 | Route & schedule optimizer | Greedy insertion + 2-opt improvement over regulatory time windows; vehicle/crew constraints | Python, network topology |
+| M3 | Route & schedule optimizer | Angular-sweep construction + 2-opt improvement over regulatory time windows; vehicle/crew constraints | Python, network topology |
 | M4 | O. Reg. 170/03 rule engine | YAML-encoded sampling rules → required-task generator with effective-date versioning | YAML, Pydantic |
 | M5 | Dashboard & reporting | Jinja2 + HTMX operator dashboard; weekly compliance summary export | FastAPI, Jinja2, HTMX |
 | M6 | Evaluation harness | Frozen-metric evaluation runs (F1 vs baseline, lead time, mileage, runtime) and report generation | pytest, pandas |
@@ -75,9 +75,16 @@ M2 and M3 and computes the frozen metrics from the Unit 2 proposal.
 - **ADR-2 Rules as YAML, not code (M4).** O. Reg. 170/03 amendments then
   become data changes with effective dates, not redeploys. Every rule entry
   carries `verified:` + CanLII reference; unverified rules are inert.
-- **ADR-3 Greedy + 2-opt, not metaheuristics (M3).** 18 points, 2 vehicles —
-  the instance is small; a transparent heuristic that runs in milliseconds
-  beats a black-box solver for operator trust and debuggability.
+- **ADR-3 Constructive sweep + 2-opt, not metaheuristics (M3).** 18 points, 2
+  vehicles — the instance is small; a transparent heuristic that runs in
+  milliseconds beats a black-box solver for operator trust and debuggability.
+  *Refined in Unit 4:* the construction was originally plain cheapest-insertion,
+  which measured 11.34 km against the frozen C4 baseline while naive
+  nearest-neighbour routing measured 11.61 km — the planner was barely ahead and
+  the margin came from luck, not design. Seeding the construction with an
+  angular sweep (cluster stops by bearing, route each sector by nearest
+  neighbour, then 2-opt) measures 9.52 km, an 18 % saving. The frozen metric is
+  what exposed the weakness.
 - **ADR-4 Server-rendered HTMX, not SPA (M5).** Minimal operational surface:
   no build step, no frontend deploy, works on the town's old laptop.
 - **ADR-5 SQLite-first persistence.** Single-file backups match how small

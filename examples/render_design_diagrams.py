@@ -5,16 +5,21 @@ Outputs:
 - docs/diagrams/erd.png           (data model overview)
 """
 from pathlib import Path
+
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs/diagrams"
 OUT.mkdir(parents=True, exist_ok=True)
 
-C_APP = "#1f77b4"; C_MOD = "#e8f1fb"; C_DATA = "#e8f7e8"; C_EXT = "#f7eee8"
+C_APP = "#1f77b4"
+C_MOD = "#e8f1fb"
+C_DATA = "#e8f7e8"
+C_EXT = "#f7eee8"
 
 
 def box(ax, x, y, w, h, label, fc, fontsize=9, ec="#333333", weight="normal", tc="black"):
@@ -35,7 +40,9 @@ def arrow(ax, x1, y1, x2, y2, label="", dashed=False, fs=7.5):
 
 # ---------------------------------------------------------------- architecture
 fig, ax = plt.subplots(figsize=(12, 8))
-ax.set_xlim(0, 12); ax.set_ylim(0, 8); ax.axis("off")
+ax.set_xlim(0, 12)
+ax.set_ylim(0, 8)
+ax.axis("off")
 ax.set_title("AquaOps ON — container & module view (Unit 3 design)", fontsize=13, pad=14)
 
 box(ax, 0.3, 5.6, 1.9, 1.0, "Operator\n(browser)", C_EXT, weight="bold")
@@ -60,24 +67,31 @@ box(ax, 10.0, 3.4, 1.7, 1.2, "SQLAlchemy\nSQLite / PG", C_DATA)
 box(ax, 10.0, 1.6, 1.7, 1.2, "WNTR/EPANET\nsim (offline)", C_DATA)
 box(ax, 3.0, 1.6, 6.4, 1.0, "data/networks: maple_creek.inp · points registry · 48 h chlorine ground truth", C_DATA)
 
-arrow(ax, 2.2, 6.1, 3.0, 6.9, "HTTP")
-arrow(ax, 2.2, 3.9, 3.0, 4.2)
-arrow(ax, 2.2, 1.7, 3.0, 2.0, "upload")
+arrow(ax, 2.2, 6.1, 3.0, 6.9, "HTMX\nrequests")
+arrow(ax, 2.2, 3.9, 3.0, 4.2, "nightly\nbatch")
+arrow(ax, 2.2, 1.7, 3.0, 2.0, "lab\nupload")
 arrow(ax, 6.2, 6.6, 6.2, 6.4)
 for x in (4.0, 6.2, 8.4):
     arrow(ax, x, 5.2, x, 4.8)
     arrow(ax, x, 3.6, x, 2.6, dashed=True)
-arrow(ax, 9.4, 5.8, 10.0, 5.8)
-arrow(ax, 9.4, 4.2, 10.0, 4.0)
+arrow(ax, 9.4, 5.8, 10.0, 5.8, "loads")
+arrow(ax, 9.4, 4.2, 10.0, 4.0, "persist")
 arrow(ax, 10.85, 2.8, 10.85, 3.4, dashed=True)
 ax.text(10.72, 3.05, "ground truth", fontsize=7.5, ha="right", color="#444444", style="italic")
+ax.text(3.0, 1.02, "Legend:    ──►  synchronous request/response          ┈┈►  scheduled or batch flow",
+        fontsize=8, style="italic", color="#444444")
+ax.text(3.0, 0.62, "All persistence is mediated by the owning module (M1–M6); ingest is idempotent on "
+                   "(sampling point, measured time).",
+        fontsize=8, style="italic", color="#444444")
 
 fig.savefig(OUT / "architecture.png", bbox_inches="tight", dpi=150)
 plt.close(fig)
 
 # ------------------------------------------------------------------------- ERD
 fig, ax = plt.subplots(figsize=(12, 8))
-ax.set_xlim(0, 12); ax.set_ylim(0, 8); ax.axis("off")
+ax.set_xlim(0, 12)
+ax.set_ylim(0, 8)
+ax.axis("off")
 ax.set_title("AquaOps ON — data model overview (Unit 3 design)", fontsize=13, pad=14)
 
 ent = [
