@@ -25,7 +25,10 @@ from __future__ import annotations
 
 import json
 import math
+import os
+import re
 import statistics
+import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -68,6 +71,51 @@ THROUGHPUT_WINDOW_S = 3.0
 
 #: C5, frozen in the Unit 2 proposal.
 P95_CEILING_MS = 300.0
+
+#: C6's coverage floor, frozen in the Unit 2 proposal.
+COVERAGE_FLOOR_PERCENT = 70.0
+
+
+def measure_coverage() -> dict[str, Any]:
+    """Run the suite and read the real statement coverage out of pytest-cov.
+
+    C6 is a number that must be measured, not supplied. The first version of this
+    script passed a literal coverage fraction to the evaluation endpoint, which is
+    exactly the kind of input that silently stops being true: the report would
+    have claimed one figure while the suite printed another. Running the same
+    command CI runs, and parsing the TOTAL row, makes the verdict a measurement.
+    """
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "--cov=app",
+            "--cov=modules",
+            "--cov-report=term",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=1800,
+        env={
+            **os.environ,
+            "MPLCONFIGDIR": os.environ.get("MPLCONFIGDIR", "/tmp/mplcache"),
+        },
+    )
+    total = re.search(r"^TOTAL\s+\d+\s+\d+\s+(\d+)%", completed.stdout, flags=re.MULTILINE)
+    passed = re.search(r"(\d+) passed", completed.stdout)
+    if total is None:
+        return {"fraction": 0.0, "percent": 0.0, "tests": 0, "measured": False}
+    percent = float(total.group(1))
+    return {
+        "fraction": round(percent / 100.0, 4),
+        "percent": percent,
+        "tests": int(passed.group(1)) if passed else 0,
+        "measured": True,
+    }
 
 
 def percentile(values: list[float], fraction: float) -> float:
@@ -337,13 +385,26 @@ def main() -> int:
         payload["peak_throughput_rps"] = peak
         say()
 
+        # ------------------------------------------------- C6, measured
+        coverage = measure_coverage()
+        payload["coverage"] = coverage
+        say("-" * 78)
+        say("C6 engineering quality, measured by running the suite CI runs")
+        say("-" * 78)
+        if coverage["measured"]:
+            say(f"  {coverage['tests']} tests passing at {coverage['percent']:.0f} % "
+                f"statement coverage against the {COVERAGE_FLOOR_PERCENT:.0f} % floor")
+        else:
+            say("  pytest-cov output could not be parsed; C6 will report a failure")
+        say()
+
         # ------------------------------------------------------- M6 verdicts
         evaluation = client.post(
             "/api/v1/eval/run",
             params={
                 "week": ISO_WEEK,
                 "git_sha": sha,
-                "coverage": 0.95,
+                "coverage": coverage["fraction"],
                 "api_p95_ms": conservative_p95,
             },
         ).json()
