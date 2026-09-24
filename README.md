@@ -94,6 +94,15 @@ why, so the history reads as a project narrative. Course milestones are
 snapshotted with git tags `u1` … `u8`; evaluation runs record the git SHA they
 were produced from.
 
+**A note on commit dates.** Units 4–6 were completed ahead of the course
+calendar, between 17 and 19 September 2026. Three Unit 5 commits —
+`07291c3`, `2462b24` and `5893439` — carry an incorrect author and commit date
+of 2026-10-01, the start of the Unit 5 week, instead of the day they were made.
+They were created and pushed on 2026-09-19: the GitHub Actions runs for those
+commits and the merge of [#11](https://github.com/oama1111/AquaOps-ON/pull/11)
+on that day are the authoritative record. The history has deliberately not been
+rewritten, so every SHA cited in the evidence remains valid.
+
 ## Continuous integration
 
 Every push and pull request runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml),
