@@ -40,7 +40,11 @@ pytest -m unit_blackbox   # tests against the public module contracts
 ```
 
 The FastAPI core in `app/main.py` serves `GET /health`, the `/api/v1` contract
-and the operator dashboard. The regulation catalogue in `rules/oreg170.yaml` is
+and the operator dashboard. From the dashboard an operator can upload a
+laboratory CSV and read its receipt, acknowledge an alert, follow a point's
+chlorine trend against the watch level and the alert threshold, and generate,
+confirm and export the week's plan — each as a plain HTML form that HTMX
+upgrades in place, so every action also works with JavaScript disabled. The regulation catalogue in `rules/oreg170.yaml` is
 now **fully verified** against the Ontario e-Laws consolidation of O. Reg. 170/03
 (last amendment 269/22): each rule carries a real section reference, and
 `tests/test_pipeline.py` fails if a placeholder is ever reintroduced.
