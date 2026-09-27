@@ -1,4 +1,26 @@
 <h2>This week's duty list{% if plan %} — plan {{ plan.id[:8] }}{% endif %}</h2>
+{% if notice %}
+  <p class="notice" role="alert">{{ notice }}</p>
+{% endif %}
+<div class="actions">
+  <form class="inline" method="post" action="/dash/week/plan"
+        hx-post="/dash/week/plan" hx-target="#week-view" hx-swap="innerHTML">
+    <input type="hidden" name="week" value="{{ week or '' }}">
+    <button type="submit">{{ "Re-plan this week" if plan else "Generate this week's plan" }}</button>
+  </form>
+  {% if plan and plan.status == "draft" %}
+  <form class="inline" method="post" action="/dash/week/confirm"
+        hx-post="/dash/week/confirm" hx-target="#week-view" hx-swap="innerHTML">
+    <input type="hidden" name="plan_id" value="{{ plan.id }}">
+    <input type="hidden" name="week" value="{{ week or '' }}">
+    <button type="submit" class="secondary">Confirm plan</button>
+  </form>
+  {% endif %}
+  {% if plan %}
+  <a href="/api/v1/plans/{{ plan.id }}/export.csv" download>Route sheet (CSV)</a>
+  {% endif %}
+  <a href="/dash/export/week.csv{% if week %}?week={{ week }}{% endif %}" download>Compliance summary (CSV)</a>
+</div>
 {% if plan %}
 <div class="totals">
   <div>Planned stops<strong>{{ plan.stops | length }}</strong></div>
@@ -29,10 +51,10 @@
     <tr>
       <td><strong>{{ task.sampling_point_id }}</strong></td>
       <td class="meta">{{ task.rule_id }}</td>
-      <td>{{ task.window_end }}</td>
+      <td>{{ task.window_end.strftime("%Y-%m-%d %H:%M") }}</td>
       <td><span class="chip">{{ task.status }}</span></td>
       <td>{{ stops_by_task[task.id].vehicle_id if task.id in stops_by_task else "—" }}</td>
-      <td>{{ stops_by_task[task.id].eta if task.id in stops_by_task else "—" }}</td>
+      <td>{{ stops_by_task[task.id].eta.strftime("%Y-%m-%d %H:%M") if task.id in stops_by_task else "—" }}</td>
     </tr>
     {% endfor %}
   </tbody>
