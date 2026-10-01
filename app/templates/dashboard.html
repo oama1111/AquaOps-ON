@@ -9,55 +9,179 @@
        See app/static/README.md for the pinned version and its checksum. -->
   <script src="/static/htmx.min.js" defer></script>
   <style>
-    :root { --ink:#12263a; --muted:#5b6b7c; --line:#d8e0e8; --accent:#1f77b4; --warn:#b8860b; --bad:#c0392b; --ok:#2e7d32; }
+    /* AquaOps ON — operator interface.
+       Visual language: utility control-room. Deep water blue for structure, a
+       restrained aqua accent, and three semantic colours (clear / watch / action)
+       that are ALWAYS paired with a written word, so colour is redundant rather
+       than load-bearing. Numbers use tabular figures so columns of readings line
+       up the way they do on a paper log sheet. */
+    :root {
+      --ink:#0b2545; --ink-2:#3c5872; --muted:#6b7f92;
+      --line:#dae4ee; --line-2:#c3d4e4;
+      --brand:#0f6ea8; --brand-2:#0d8fb8; --brand-ink:#08324f;
+      --surface:#ffffff; --tint:#eef6fc;
+      --ok:#12673f; --ok-bg:#e6f4ec; --ok-line:#a9d5bd;
+      --watch:#935c00; --watch-bg:#fdf3e0; --watch-line:#eccb8a;
+      --bad:#a8231c; --bad-bg:#fdecea; --bad-line:#f0b5b1;
+      --radius:10px;
+      --shadow:0 1px 2px rgba(11,37,69,.06), 0 1px 8px rgba(11,37,69,.05);
+    }
     * { box-sizing: border-box; }
-    body { margin:0; font:15px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color:var(--ink); background:#f6f8fa; }
-    header { background:#fff; border-bottom:1px solid var(--line); padding:18px 28px; }
-    h1 { margin:0; font-size:21px; }
-    .disclaimer { margin:6px 0 0; color:var(--warn); font-size:13px; }
-    main { padding:22px 28px 60px; display:grid; gap:22px; max-width:1180px; }
-    section { background:#fff; border:1px solid var(--line); border-radius:8px; padding:18px; }
-    section h2 { margin:0 0 12px; font-size:16px; }
+    body {
+      margin:0; color:var(--ink); background:#f6f8fa;
+      font:15px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    .num, td, .kpi strong, .totals strong { font-variant-numeric: tabular-nums; }
+
+    /* ---------------------------------------------------------------- header */
+    header {
+      background:linear-gradient(135deg, #0b2545 0%, #0e3f66 55%, #0f6ea8 100%);
+      color:#fff; padding:18px 28px 16px;
+      border-bottom:3px solid var(--brand-2);
+    }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .mark { width:30px; height:30px; flex:0 0 auto; color:#7fd3ee; }
+    h1 { margin:0; font-size:21px; letter-spacing:.1px; font-weight:650; }
+    .tagline { margin:2px 0 0; font-size:12.5px; color:#b9d6ea; letter-spacing:.2px; }
+    .disclaimer {
+      margin:12px 0 0; padding:7px 12px; border-radius:6px;
+      background:rgba(255,255,255,.09); border-left:3px solid #f0c46a;
+      color:#f4e4c4; font-size:12.5px;
+    }
+
+    /* ----------------------------------------------------------------- cards */
+    main { padding:22px 28px 60px; display:grid; gap:20px; max-width:1180px; }
+    section {
+      background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+      padding:0 18px 18px; box-shadow:var(--shadow); overflow:hidden;
+    }
+    section > h2 {
+      margin:0 -18px 14px; padding:13px 18px 12px; font-size:15px; font-weight:650;
+      color:var(--brand-ink); letter-spacing:.2px;
+      background:linear-gradient(180deg, #f7fbfe 0%, #ffffff 100%);
+      border-bottom:1px solid var(--line);
+    }
+    h3 { margin:0 0 8px; font-size:15px; }
+
+    /* ----------------------------------------------------------------- table */
     table { width:100%; border-collapse:collapse; font-size:14px; }
-    th, td { text-align:left; padding:7px 9px; border-bottom:1px solid var(--line); }
-    th { color:var(--muted); font-weight:600; }
-    .chip { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; border:1px solid var(--line); }
-    .chip.dead_end { background:#fdecea; border-color:#f2b8b5; }
-    .chip.looped { background:#eaf2fb; border-color:#bcd6ef; }
-    .chip.alert { background:#fdecea; border-color:#f2b8b5; color:var(--bad); font-weight:600; }
-    .chip.clear { color:var(--ok); }
-    .alert { border:1px solid var(--line); border-left:4px solid var(--bad); border-radius:6px; padding:12px 14px; margin-bottom:12px; }
-    .alert.watch { border-left-color:var(--warn); }
-    .alert h3 { margin:0 0 6px; font-size:15px; }
-    .code { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; color:var(--bad); }
+    th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line); }
+    th {
+      color:var(--muted); font-weight:600; font-size:12px; letter-spacing:.4px;
+      text-transform:uppercase; background:#fafcfe; border-bottom:1px solid var(--line-2);
+    }
+    tbody tr:hover { background:#f7fbfe; }
+    tbody tr:last-child td { border-bottom:none; }
+    td strong { color:var(--brand-ink); }
+
+    /* ----------------------------------------------------------------- chips */
+    .chip {
+      display:inline-flex; align-items:center; gap:5px; padding:2px 9px;
+      border-radius:999px; font-size:12px; border:1px solid var(--line-2);
+      background:#f4f8fb; color:var(--ink-2); white-space:nowrap;
+    }
+    .chip::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.55; }
+    .chip.dead_end { background:var(--watch-bg); border-color:var(--watch-line); color:var(--watch); }
+    .chip.looped { background:var(--tint); border-color:#bcd9ef; color:#155e8c; }
+    .chip.alert { background:var(--bad-bg); border-color:var(--bad-line); color:var(--bad); font-weight:600; }
+    .chip.alert::before { opacity:1; }
+    .chip.clear { background:var(--ok-bg); border-color:var(--ok-line); color:var(--ok); }
+    .chip.watch { background:var(--watch-bg); border-color:var(--watch-line); color:var(--watch); font-weight:600; }
+    .chip.action { background:var(--bad-bg); border-color:var(--bad-line); color:var(--bad); font-weight:600; }
+    .chip.quiet { background:var(--ok-bg); border-color:var(--ok-line); color:var(--ok); }
+
+    /* ------------------------------------------------------------ summary row */
+    .kpi-row { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 14px; }
+    .kpi {
+      flex:1 1 150px; border:1px solid var(--line); border-radius:8px;
+      padding:9px 12px; background:linear-gradient(180deg,#ffffff,#f8fbfe);
+    }
+    .kpi span { display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); }
+    .kpi strong { display:block; font-size:20px; line-height:1.25; color:var(--brand-ink); }
+    .kpi.attention { border-color:var(--bad-line); background:linear-gradient(180deg,#fff,#fdf6f5); }
+    .kpi.attention strong { color:var(--bad); }
+
+    /* ----------------------------------------------------------------- alerts */
+    .alert {
+      border:1px solid var(--line); border-left:5px solid var(--bad);
+      border-radius:8px; padding:14px 16px; margin-bottom:12px; background:#fff;
+    }
+    .alert:last-child { margin-bottom:0; }
+    .alert.watch { border-left-color:#d99b1f; background:linear-gradient(90deg,#fffdf7 0%,#fff 60%); }
+    .alert .head { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+    .alert .head h3 { margin:0; font-size:16px; color:var(--brand-ink); }
+    .code {
+      font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px;
+      color:var(--bad); margin:0 0 10px;
+    }
+    .code .lbl { font-family:inherit; color:var(--muted); }
+    .evidence {
+      display:grid; grid-template-columns:repeat(auto-fit, minmax(118px, 1fr));
+      gap:8px 14px; margin:0 0 12px; padding:10px 12px;
+      background:#f8fbfe; border:1px solid var(--line); border-radius:6px;
+    }
+    .evidence div { font-size:12px; color:var(--muted); }
+    .evidence b { display:block; font-size:15px; color:var(--ink); font-weight:600; }
     .meta { color:var(--muted); font-size:13px; }
-    .empty { color:var(--muted); font-style:italic; }
-    .totals { display:flex; gap:26px; margin:4px 0 14px; }
-    .totals div { font-size:13px; color:var(--muted); }
-    .totals strong { display:block; font-size:19px; color:var(--ink); }
-    form.inline { display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px 12px; margin:8px 0 0; }
-    label { display:flex; flex-direction:column; gap:3px; font-size:13px; color:var(--muted); }
-    input, select { font:inherit; font-size:14px; padding:5px 8px; border:1px solid var(--line); border-radius:5px; background:#fff; color:var(--ink); }
-    button { font:inherit; font-size:14px; padding:6px 14px; border-radius:5px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
-    button.secondary { background:#fff; color:var(--accent); }
-    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-    .actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin:0 0 12px; }
+    .empty {
+      color:var(--ink-2); font-style:normal; background:var(--ok-bg);
+      border:1px solid var(--ok-line); border-radius:6px; padding:10px 14px;
+    }
+    .empty::before { content:"✓ "; color:var(--ok); font-weight:700; }
+
+    /* -------------------------------------------------------------- plan/acts */
+    .actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin:0 0 14px; }
     .actions form.inline { margin:0; }
-    .actions a { font-size:14px; color:var(--accent); }
-    .notice { background:#fff8e1; border:1px solid #f0d58a; border-radius:5px; padding:8px 12px; margin:0 0 12px; }
-    .receipt { margin-top:14px; border-top:1px solid var(--line); padding-top:12px; }
-    .receipt h3 { margin:0 0 6px; font-size:15px; }
+    .actions a { font-size:13.5px; color:var(--brand); text-decoration:none; border-bottom:1px solid #bcd9ef; }
+    .actions a:hover { border-bottom-color:var(--brand); }
+    .totals { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 16px; }
+    .totals > div {
+      flex:1 1 130px; border:1px solid var(--line); border-radius:8px;
+      padding:8px 12px; font-size:11.5px; text-transform:uppercase;
+      letter-spacing:.4px; color:var(--muted);
+      background:linear-gradient(180deg,#ffffff,#f8fbfe);
+    }
+    .totals strong { display:block; font-size:19px; letter-spacing:0; text-transform:none; color:var(--brand-ink); }
+
+    /* ------------------------------------------------------------------ forms */
+    form.inline { display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px 12px; margin:8px 0 0; }
+    label { display:flex; flex-direction:column; gap:3px; font-size:12.5px; color:var(--muted); }
+    input, select {
+      font:inherit; font-size:14px; padding:6px 9px; border:1px solid var(--line-2);
+      border-radius:6px; background:#fff; color:var(--ink);
+    }
+    input:hover, select:hover { border-color:#9fbdd6; }
+    button {
+      font:inherit; font-size:14px; font-weight:550; padding:7px 15px; border-radius:6px;
+      border:1px solid var(--brand); background:var(--brand); color:#fff; cursor:pointer;
+    }
+    button:hover { background:#0d5f92; }
+    button.secondary { background:#fff; color:var(--brand); }
+    button.secondary:hover { background:var(--tint); }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+      outline:2px solid var(--brand-2); outline-offset:2px;
+    }
+    .notice {
+      background:var(--watch-bg); border:1px solid var(--watch-line); color:#6d4400;
+      border-radius:6px; padding:9px 13px; margin:0 0 12px;
+    }
+    .receipt { margin-top:16px; border-top:1px solid var(--line); padding-top:14px; }
+    .receipt h3 { margin:0 0 6px; font-size:15px; color:var(--brand-ink); }
     .htmx-request button[type=submit] { opacity:.6; }
+
+    /* ------------------------------------------------------------------ chart */
     svg.trend { width:100%; max-width:760px; height:auto; display:block; margin:12px 0 6px; }
     svg.trend .grid { stroke:var(--line); stroke-width:1; }
     svg.trend .tick, svg.trend .ref-label { fill:var(--muted); font-size:11px; }
     svg.trend .ref { stroke-width:1.5; stroke-dasharray:6 4; }
-    svg.trend .ref.watch { stroke:var(--warn); }
+    svg.trend .ref.watch { stroke:#d99b1f; }
     svg.trend .ref.limit { stroke:var(--bad); }
-    svg.trend .series { fill:none; stroke:var(--accent); stroke-width:2; }
-    svg.trend .dot { fill:#fff; stroke:var(--accent); stroke-width:2; }
+    svg.trend .series { fill:none; stroke:var(--brand); stroke-width:2; }
+    svg.trend .dot { fill:#fff; stroke:var(--brand); stroke-width:2; }
     details { font-size:14px; }
-    summary { cursor:pointer; color:var(--accent); }
+    summary { cursor:pointer; color:var(--brand); }
+
     /* Narrow screens. The duty table carries six columns and the network table
        five; at phone width they used to push the whole page sideways and clip
        the Vehicle and ETA columns, which is where the operator reads which truck
@@ -66,15 +190,28 @@
     @media (max-width: 760px) {
       header { padding:14px 16px; }
       main { padding:14px 16px 40px; }
-      section { padding:12px; }
+      section { padding:0 12px 14px; }
+      section > h2 { margin:0 -12px 12px; padding:11px 12px 10px; }
       table { display:block; width:100%; overflow-x:auto; white-space:nowrap; }
-      .totals { flex-wrap:wrap; gap:14px 22px; }
+      .totals { flex-wrap:wrap; gap:10px; }
+      .kpi-row { gap:8px; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>AquaOps ON — {{ system_name }}</h1>
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <path d="M16 2.5c4.9 6.6 9.6 12.1 9.6 17.1A9.6 9.6 0 0 1 6.4 19.6C6.4 14.6 11.1 9.1 16 2.5z"
+              fill="currentColor" opacity=".92"/>
+        <path d="M8.5 21.4c2.1 1.5 4.4 2.2 7.5 2.2s5.4-.7 7.5-2.2" fill="none"
+              stroke="#0b2545" stroke-width="1.6" stroke-linecap="round" opacity=".35"/>
+      </svg>
+      <div>
+        <h1>AquaOps ON — {{ system_name }}</h1>
+        <p class="tagline">Sampling compliance &amp; chlorine early warning · O. Reg. 170/03</p>
+      </div>
+    </div>
     <p class="disclaimer">Decision support only. Output is not legal proof of compliance;
       licensed operator judgment prevails.</p>
   </header>

@@ -7,15 +7,19 @@
 {% endif %}
 {% for alert in alerts %}
 <div class="alert {{ alert.severity }}">
-  <h3>{{ alert.sampling_point_id }} — {{ alert.severity | upper }} ({{ alert.model }})</h3>
-  <p class="code">reason: {{ alert.reason_codes }}</p>
-  <p class="meta">
-    last reading {{ alert.last_reading_mg_l }} mg/L
-    · threshold {{ alert.threshold_mg_l }} mg/L
-    · ewma z {{ alert.ewma_z if alert.ewma_z is not none else "n/a" }}
-    · isolation score {{ alert.iforest_score if alert.iforest_score is not none else "n/a" }}
-    · raised {{ alert.raised_at.strftime("%Y-%m-%d %H:%M") }} UTC
-  </p>
+  <div class="head">
+    <h3>{{ alert.sampling_point_id }}</h3>
+    <span class="chip {{ alert.severity }}">{{ alert.severity | upper }}</span>
+    <span class="meta">model {{ alert.model }}</span>
+  </div>
+  <p class="code"><span class="lbl">reason:</span> {{ alert.reason_codes }}</p>
+  <div class="evidence">
+    <div>last reading<b>{{ alert.last_reading_mg_l }} mg/L</b></div>
+    <div>alert threshold<b>{{ alert.threshold_mg_l }} mg/L</b></div>
+    <div>ewma z<b>{{ "%.2f"|format(alert.ewma_z) if alert.ewma_z is not none else "n/a" }}</b></div>
+    <div>isolation score<b>{{ "%.4f"|format(alert.iforest_score) if alert.iforest_score is not none else "n/a" }}</b></div>
+  </div>
+  <p class="meta">Raised {{ alert.raised_at.strftime("%Y-%m-%d %H:%M") }} UTC</p>
   {# Acknowledging records who and when; the alert is kept, never deleted. #}
   <form class="inline" method="post" action="/dash/alerts/{{ alert.id }}/ack"
         hx-post="/dash/alerts/{{ alert.id }}/ack" hx-target="#alert-inbox" hx-swap="innerHTML">
