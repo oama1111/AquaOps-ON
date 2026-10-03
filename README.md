@@ -40,7 +40,11 @@ pytest -m unit_blackbox   # tests against the public module contracts
 ```
 
 The FastAPI core in `app/main.py` serves `GET /health`, the `/api/v1` contract
-and the operator dashboard. The regulation catalogue in `rules/oreg170.yaml` is
+and the operator dashboard. From the dashboard an operator can upload a
+laboratory CSV and read its receipt, acknowledge an alert, follow a point's
+chlorine trend against the watch level and the alert threshold, and generate,
+confirm and export the week's plan — each as a plain HTML form that HTMX
+upgrades in place, so every action also works with JavaScript disabled. The regulation catalogue in `rules/oreg170.yaml` is
 now **fully verified** against the Ontario e-Laws consolidation of O. Reg. 170/03
 (last amendment 269/22): each rule carries a real section reference, and
 `tests/test_pipeline.py` fails if a placeholder is ever reintroduced.
@@ -56,7 +60,10 @@ python examples/unit6_ui.py            # heuristic usability review + screenshot
 ```
 
 Their findings are summarised in [`docs/deployment.md`](docs/deployment.md),
-which is the deployment plan and the configuration record.
+which is the deployment plan and the configuration record. Since 2026-10-01 the
+system also runs on a real host — a small VPS serving `https://aquaops-on.locoko.com`
+through Caddy (TLS plus a basic-auth gate at the proxy, since the application
+middleware is not implemented yet), recorded as Section 8 of that document.
 
 ## Repository layout
 
@@ -106,12 +113,13 @@ rewritten, so every SHA cited in the evidence remains valid.
 ## Continuous integration
 
 Every push and pull request runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml),
-split into two jobs by feedback speed:
+split into three jobs by feedback speed:
 
 | Job | What it does | Why it is separate |
 | --- | --- | --- |
 | `quality` | `ruff` lint, `mypy` type check, and `pytest` with a **70% coverage floor** | Fast enough to run on every commit; needs no simulation stack |
 | `case-data` | Rebuilds the Maple Creek network and re-runs the plausibility validator, which exits non-zero on violation, then uploads the log as a build artefact | Slow, so it must not gate the fast feedback loop |
+| `container` | Builds the deployment image, starts the compose profile, waits for the image's own health probe, and exercises the running service over HTTP | Closes the gap opened by the development machine having no container runtime: the image is built and verified by a machine on every push, not asserted in a report |
 
 The coverage floor is not arbitrary: **C6** in the project's frozen success criteria
 is "test coverage ≥ 70% and a reproducible deployment", so the pipeline turns that

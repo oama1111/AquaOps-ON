@@ -66,12 +66,15 @@ def ingest_lab_csv(
     duplicates = 0
     upload_id = str(uuid.uuid4())
 
-    for reading in parsed.readings:
+    # Iterate over a copy: `reject` removes the reading from `parsed.readings`,
+    # and removing from the list being iterated skips the row after it, which
+    # was then neither stored nor reported as refused.
+    for reading in list(parsed.readings):
         if reading.sampling_point_id not in registered:
             parsed.reject(
                 reading,
                 RowError(
-                    row_number=0,
+                    row_number=reading.row_number,
                     field="sampling_point_id",
                     message=f"point {reading.sampling_point_id} is not registered",
                 ),

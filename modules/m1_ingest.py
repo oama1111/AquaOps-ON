@@ -38,6 +38,7 @@ class ParsedReading:
     measured_at: datetime
     free_chlorine_mg_l: float
     source: ReadingSource = ReadingSource.LAB_CSV
+    row_number: int = 0  # line in the source file, so a later refusal can name it
 
 
 @dataclass
@@ -159,6 +160,7 @@ def parse_lab_csv(csv_path: Path) -> LabParseResult:
                     sampling_point_id=point_id,
                     measured_at=measured_at,
                     free_chlorine_mg_l=value,
+                    row_number=number,
                 )
             )
     return result

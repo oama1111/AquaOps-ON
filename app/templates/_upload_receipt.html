@@ -1,0 +1,31 @@
+<div class="receipt" role="status">
+  <h3>Receipt — {{ filename }}</h3>
+  {% if problem %}
+    <p class="notice">{{ problem }}</p>
+  {% else %}
+  <p>
+    {{ rows_total }} row(s) read ·
+    <strong>{{ rows_accepted }} stored</strong> ·
+    {{ duplicates }} already on record ·
+    {{ errors | length }} refused
+  </p>
+  {% if duplicates and not rows_accepted %}
+    <p class="meta">Every valid row in this file was already stored, so nothing was
+      written twice. Readings are keyed on sampling point and measured time.</p>
+  {% endif %}
+  {% if errors %}
+  <table>
+    <thead><tr><th>Row</th><th>Field</th><th>Reason refused</th></tr></thead>
+    <tbody>
+      {% for error in errors %}
+      <tr>
+        <td>{{ error.row_number }}</td>
+        <td class="meta">{{ error.field }}</td>
+        <td>{{ error.message }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% endif %}
+</div>
