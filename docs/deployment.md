@@ -260,15 +260,54 @@ them:
    reachable, so the `Dockerfile` and `docker-compose.yml` are reviewed artefacts
    rather than a run image. What *was* executed is the same application run in
    production mode on loopback, the runtime-dependency guard, and the health
-   probe the image declares. Building the image and running the compose profile
-   on a machine with Docker is the first item of remaining work.
-2. **There is no authentication in the running configuration.** The Unit 3
-   specification defers the role model, and `AQUAOPS_AUTH_TOKEN` is declared but
-   not yet enforced by a middleware. Until it is, the deployment must stay bound
-   to loopback or sit behind a proxy that authenticates.
+   probe the image declares. Continuous integration now closes part of this gap:
+   the `container` job builds the image, starts the compose profile, waits for
+   the health probe, and exercises the service over HTTP on every push
+   ([run 35466525951](https://github.com/oama1111/AquaOps-ON/actions/runs/35466525951),
+   on tag `u6`). Building the image on the deployment host itself remains the
+   first item of remaining work.
+2. **There is no authentication in the application.** The Unit 3 specification
+   defers the role model, and `AQUAOPS_AUTH_TOKEN` is declared but not yet
+   enforced by a middleware. The 2026-10-01 field deployment (Section 8) works
+   around this exactly as this document advises — basic authentication at the
+   Caddy reverse proxy — but any deployment must keep that gate in front until
+   the middleware exists.
 3. **SQLite means one writer.** This is a deliberate single-town trade, not an
    oversight, and PostgreSQL is the documented exit.
 4. **There is no alerting on the container itself.** Docker's own log rotation is
    configured, but nothing pages anyone if the health check starts failing. For a
    system whose whole purpose is to warn, that is the most important gap on this
    list.
+
+---
+
+## 8. Field record — first run on a real host (2026-10-01)
+
+The plan above was executed for real on a small virtual private server, in the
+shape of the documented "on-premise virtual machine without containers"
+alternative rather than the container, because that host has no container
+runtime. Recorded here so the configuration is reproducible:
+
+| Item | Value |
+| --- | --- |
+| Host | RackNerd VPS, Ubuntu 24.04, 1 GB RAM (`198.46.188.224`) |
+| Public URL | `https://aquaops-on.locoko.com` |
+| Application | `/srv/aquaops/app`, exported with `git archive` from `feature/dashboard-polish` (app, modules, rules, `data/networks/` only) |
+| Python environment | `/srv/aquaops/venv` from `requirements-runtime.txt` (scikit-learn included; WNTR/pandas/matplotlib excluded) |
+| Process | `aquaops.service` under `systemd`, dedicated `aquaops` user, bound to `127.0.0.1:8000`, enabled at boot |
+| Reverse proxy | Caddy site block in `/etc/caddy/Caddyfile`: TLS by Let's Encrypt, HTTP→HTTPS redirect, `basic_auth` gate (shared operator password, hash in the Caddyfile) — this is the authentication the application itself does not yet enforce (limitation 2) |
+| Database | `/srv/aquaops/app/aquaops.db`, seeded for the current ISO week (`examples/seed_demo.py` re-run between sessions) |
+| Resident memory | ~59 MiB for the service; ~517 MiB free on the 1 GB host |
+
+Smoke checks performed over the public URL after each restart: the dashboard
+renders the seeded SP15 alert with its reason codes; `POST` to the acknowledge
+form returns 303 and the inbox drops to "0 open" (write path and file
+permissions correct under the dedicated user); the week view shows the 36-stop,
+9.838 km plan with the first stop's vehicle and ETA.
+
+One DNS lesson worth recording: the hostname sat behind a Cloudflare proxied
+record ("orange cloud") at first, and the combination of Cloudflare's plain-HTTP
+origin fetch with Caddy's HTTPS redirect looped with 308 responses. Switching
+the record to "DNS only" (grey cloud) resolved it — the origin answers directly
+and Caddy's certificate is already issued.
+
