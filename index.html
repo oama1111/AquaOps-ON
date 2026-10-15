@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AquaOps ON — MSIT 5910 Capstone Portfolio</title>
+<meta name="description" content="Capstone project portfolio: AquaOps ON, a compliance scheduling and water-quality early-warning platform for small Ontario drinking water systems.">
+<style>
+  :root{
+    --ink:#0f2733; --muted:#4c6572; --accent:#0e7490; --accent-2:#155e75;
+    --card:#ffffff; --bg:#f4f8fa; --line:#d9e5ea; --ok:#0f766e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.6}
+  header.hero{background:linear-gradient(135deg,#0e7490,#155e75 60%,#0f2733);color:#fff;padding:64px 24px 48px}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+  .hero .wrap{padding:0 20px}
+  .kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.8rem;opacity:.85}
+  h1{font-size:2.1rem;margin:.3em 0 .4em;line-height:1.2}
+  .subtitle{font-size:1.1rem;max-width:46em;opacity:.95}
+  .hero .btnrow{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px}
+  .btn{display:inline-block;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;font-size:.95rem}
+  .btn.light{background:#fff;color:var(--accent-2)}
+  .btn.ghost{border:1.5px solid rgba(255,255,255,.8);color:#fff}
+  section{padding:40px 0 8px}
+  h2{font-size:1.35rem;margin:0 0 14px;color:var(--accent-2)}
+  h3{font-size:1.05rem;margin:22px 0 6px}
+  p{margin:.4em 0}
+  .muted{color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:14px}
+  .metric{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .metric .v{font-size:1.5rem;font-weight:700;color:var(--accent-2)}
+  .metric .l{font-size:.85rem;color:var(--muted)}
+  .metric .t{font-size:.78rem;color:var(--ok);margin-top:2px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+  .card h3{margin-top:0}
+  .card a{color:var(--accent);font-weight:600;text-decoration:none}
+  .card a:hover{text-decoration:underline}
+  ul.tight{margin:.3em 0;padding-left:1.2em}
+  ul.tight li{margin:.25em 0}
+  figure{margin:18px 0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+  figure img{width:100%;height:auto;border-radius:6px}
+  figcaption{font-size:.83rem;color:var(--muted);margin-top:8px}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .tag{background:#e3eef2;color:var(--accent-2);border-radius:999px;padding:4px 12px;font-size:.82rem;font-weight:600}
+  footer{padding:34px 0 50px;color:var(--muted);font-size:.88rem}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">MSIT 5910 Capstone · University of the People · 2026</div>
+    <h1>AquaOps ON</h1>
+    <p class="subtitle">A compliance-scheduling and water-quality early-warning platform that converts
+    Ontario regulation O.&nbsp;Reg.&nbsp;170/03 sampling obligations and chlorine-trend data into an executable
+    weekly work plan for one- and two-person drinking water operations.</p>
+    <div class="btnrow">
+      <a class="btn light" href="https://github.com/oama1111/AquaOps-ON">Source code on GitHub</a>
+      <a class="btn ghost" href="https://github.com/oama1111/AquaOps-ON#readme">Project README</a>
+      <a class="btn ghost" href="https://github.com/oama1111/AquaOps-ON/actions">CI pipeline</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="results">
+  <h2>Measured results</h2>
+  <p class="muted">Seven success criteria were frozen at proposal stage and evaluated on the integrated,
+  deployed system. All six measurable criteria passed; the usability criterion was partly met.</p>
+  <div class="grid">
+    <div class="metric"><div class="v">0.788</div><div class="l">Anomaly detection F1</div><div class="t">vs. 0.0 fixed-threshold baseline ✓</div></div>
+    <div class="metric"><div class="v">9 cycles</div><div class="l">Median warning lead time</div><div class="t">target ≥ 1 sampling cycle ✓</div></div>
+    <div class="metric"><div class="v">0</div><div class="l">Missed regulatory windows</div><div class="t">hard constraint held ✓</div></div>
+    <div class="metric"><div class="v">−15.84%</div><div class="l">Route mileage vs. nearest-neighbour</div><div class="t">target ≥ 15% saving ✓</div></div>
+    <div class="metric"><div class="v">7.06 ms</div><div class="l">API p95 latency</div><div class="t">target &lt; 300 ms ✓</div></div>
+    <div class="metric"><div class="v">95%</div><div class="l">Test coverage (109 tests)</div><div class="t">target ≥ 70% ✓</div></div>
+    <div class="metric"><div class="v">70.5</div><div class="l">System Usability Scale (n = 5)</div><div class="t">target ≥ 68 — partly met</div></div>
+  </div>
+</section>
+
+<section id="deliverables">
+  <h2>Deliverables</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>Working prototype &amp; code</h3>
+      <p>End-to-end pipeline — laboratory CSV import → anomaly alerts → regulation-derived duties →
+      routed weekly plan → operator dashboard — delivered as a single Docker image with a verified
+      field deployment.</p>
+      <p><a href="https://github.com/oama1111/AquaOps-ON">Repository</a> ·
+         <a href="https://github.com/oama1111/AquaOps-ON/tags">Per-unit release tags u1–u8</a></p>
+    </div>
+    <div class="card">
+      <h3>Design documents</h3>
+      <p>Architecture, data model (13 entities), and a versioned REST API specification —
+      19 paths in six groups under <code>/api/v1</code> with RFC 9457 problem+json errors.</p>
+      <p><a href="https://github.com/oama1111/AquaOps-ON/blob/main/docs/architecture.md">Architecture</a> ·
+         <a href="https://github.com/oama1111/AquaOps-ON/blob/main/docs/data-model.md">Data model</a> ·
+         <a href="https://github.com/oama1111/AquaOps-ON/blob/main/docs/api-spec.md">API spec</a></p>
+    </div>
+    <div class="card">
+      <h3>Deployment &amp; operations</h3>
+      <p>Containerized deployment with a written configuration record a third party can reproduce,
+      plus a maintenance plan with regression, backup, and rule-amendment procedures.</p>
+      <p><a href="https://github.com/oama1111/AquaOps-ON/blob/main/docs/deployment.md">Deployment guide</a></p>
+    </div>
+    <div class="card">
+      <h3>Engineering evidence</h3>
+      <p>Real commit history across feature branches and pull requests, GitHub Actions CI runs,
+      coverage reports, evaluation harness output, and a five-participant usability study.</p>
+      <p><a href="https://github.com/oama1111/AquaOps-ON/actions">CI runs</a> ·
+         <a href="https://github.com/oama1111/AquaOps-ON/pulls">Pull requests</a> ·
+         <a href="https://github.com/users/oama1111/projects/1">Project board</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="system">
+  <h2>System at a glance</h2>
+  <p>Small Ontario water systems are run by one or two certified operators who carry personal liability
+  for missed sampling and late adverse-result reporting. AquaOps ON encodes the regulation as
+  <em>versioned, section-traceable data</em> (YAML rules verified against O.&nbsp;Reg.&nbsp;170/03), detects
+  chlorine decay with an explainable EWMA + Isolation&nbsp;Forest detector, and schedules duties around
+  regulatory windows with a greedy + 2-opt route planner. Every compliance record lives in an
+  append-only audit trail.</p>
+
+  <figure>
+    <img src="assets/architecture.png" alt="Six-module architecture of AquaOps ON">
+    <figcaption>Figure 1 — Six-module architecture: M1 data layer, M2 anomaly detection, M3 scheduling &amp; routing, M4 rules engine, M5 API, M6 dashboard.</figcaption>
+  </figure>
+  <figure>
+    <img src="assets/2026-09-11-maple-creek-network.png" alt="Maple Creek case network with 18 sampling points">
+    <figcaption>Figure 2 — The Township of Maple Creek case system (population ≈ 4,800, 18 sampling points, 2 vehicles), physically simulated with WNTR.</figcaption>
+  </figure>
+  <figure>
+    <img src="assets/2026-09-11-maple-creek-chlorine.png" alt="Simulated chlorine residuals across the case network">
+    <figcaption>Figure 3 — Simulated free-chlorine residuals used to calibrate and evaluate the early-warning detector.</figcaption>
+  </figure>
+</section>
+
+<section id="stack">
+  <h2>Technology stack</h2>
+  <div class="tags">
+    <span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">SQLAlchemy</span>
+    <span class="tag">Pydantic</span><span class="tag">Jinja2 + HTMX</span><span class="tag">Chart.js</span>
+    <span class="tag">scikit-learn</span><span class="tag">WNTR (EPANET)</span><span class="tag">SQLite / PostgreSQL</span>
+    <span class="tag">pytest + pytest-cov</span><span class="tag">Docker Compose</span><span class="tag">GitHub Actions</span>
+  </div>
+</section>
+
+<section id="about">
+  <h2>About the author</h2>
+  <p>Built by <strong>oama1111</strong> as the capstone project for the Master of Science in Information
+  Technology at University of the People. The author is an Ontario DZ licence holder preparing for
+  OWWCO Operator-in-Training certification, and designed the platform around the daily reality of
+  small-system operators.</p>
+  <ul class="tight">
+    <li>GitHub: <a href="https://github.com/oama1111">github.com/oama1111</a></li>
+    <li>Project board: <a href="https://github.com/users/oama1111/projects/1">github.com/users/oama1111/projects/1</a></li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    AquaOps ON is a decision-support prototype. Its output is not legal proof of compliance;
+    licensed-operator judgment prevails. Regulation data paraphrases O.&nbsp;Reg.&nbsp;170/03 under the
+    Safe Drinking Water Act, 2002 (King's Printer for Ontario). Datasets used under the Open Government
+    Licence – Ontario.
+  </div>
+</footer>
+
+</body>
+</html>
