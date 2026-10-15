@@ -64,10 +64,26 @@ versioned with the app:
 
 | Path | Fragment |
 |---|---|
-| `GET /dash/choropleth` | Network map with per-point status chips |
-| `GET /dash/alerts` | Open-alert list (poll 30 s) |
-| `GET /dash/week` | This week's plan vs. regulatory windows |
-| `GET /dash/export/weekly.pdf` | Weekly compliance summary |
+| `GET /dash/network` | Network table with per-point status chips (poll 60 s) |
+| `GET /dash/alerts` | Open-alert list with an acknowledge form per alert (poll 30 s, paused while the operator is typing) |
+| `GET /dash/trend?point=` | One point's chlorine series as inline SVG, with the watch level and alert threshold |
+| `GET /dash/week` | This week's plan vs. regulatory windows, with plan, confirm and export actions |
+| `GET /dash/export/week.csv` | Weekly compliance summary (CSV) |
+
+Operator actions. Each is an HTML form: an HTMX request gets back the fragment
+it changed, a plain form post gets the page (or a 303 back to it). They call the
+same services as the `/api/v1` endpoints and add no rules of their own.
+
+| Path | Action | API equivalent |
+|---|---|---|
+| `POST /dash/upload` | Laboratory CSV upload; returns the receipt with stored, already-on-record and refused rows | `POST /api/v1/systems/{id}/ingest/lab-csv` |
+| `POST /dash/alerts/{id}/ack` | Acknowledge with operator ID and optional note; never a delete | `POST /api/v1/alerts/{id}/ack` |
+| `POST /dash/week/plan` | Generate the week's duties from the verified rules, then plan routes | `POST /api/v1/tasks/generate` + `POST /api/v1/plans` |
+| `POST /dash/week/confirm` | Confirm a draft plan | `POST /api/v1/plans/{id}/confirm` |
+
+The trend is drawn on the server rather than with a charting library: the
+dashboard loads nothing from another origin and must stay readable without
+JavaScript, and a server-side drawing meets both without a new dependency.
 
 ## 6. Evaluation (M6)
 

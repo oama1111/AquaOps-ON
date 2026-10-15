@@ -1,4 +1,18 @@
 <h2>Network status — {{ points | length }} sampling points</h2>
+{% set ns = namespace(readings=0, alerts=0, spurs=0) %}
+{% for point in points %}
+  {% if point.last_reading is not none %}{% set ns.readings = ns.readings + 1 %}{% endif %}
+  {% if alerts_by_point.get(point.id) %}{% set ns.alerts = ns.alerts + 1 %}{% endif %}
+  {% if point.location_type == "dead_end" %}{% set ns.spurs = ns.spurs + 1 %}{% endif %}
+{% endfor %}
+<div class="kpi-row">
+  <div class="kpi"><span>Points registered</span><strong>{{ points | length }}</strong></div>
+  <div class="kpi"><span>Readings on file</span><strong>{{ ns.readings }}</strong></div>
+  <div class="kpi{% if ns.alerts %} attention{% endif %}">
+    <span>Points with an open alert</span><strong>{{ ns.alerts }}</strong>
+  </div>
+  <div class="kpi"><span>Dead-end spurs</span><strong>{{ ns.spurs }}</strong></div>
+</div>
 <table>
   <thead>
     <tr>
@@ -11,7 +25,7 @@
   </thead>
   <tbody>
     {% for point in points %}
-    <tr>
+    <tr{% if alerts_by_point.get(point.id) %} style="background:#fffafa"{% endif %}>
       <td><strong>{{ point.id }}</strong></td>
       <td class="meta">{{ point.node_id }}</td>
       <td><span class="chip {{ point.location_type }}">{{ point.location_type }}</span></td>

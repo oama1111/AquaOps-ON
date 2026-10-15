@@ -104,6 +104,25 @@ def test_ingest_refuses_an_unregistered_point(seeded: Session) -> None:
     assert parsed.rows_rejected == 1
 
 
+def test_ingest_keeps_the_row_after_an_unregistered_point(seeded: Session) -> None:
+    """Regression: refusing a row used to skip the one after it, silently.
+
+    The refusal removed the reading from the list being iterated, so the next
+    reading was never visited — neither stored nor reported. The demo file
+    hid this because its unregistered row is the last one.
+    """
+    body = (
+        b"sampling_point_id,measured_at,free_chlorine_mg_l\n"
+        b"ZZ99,2026-09-10T08:00:00Z,0.8\n"
+        b"SP02,2026-09-10T08:00:00Z,0.9\n"
+        b"SP03,2026-09-10T08:00:00Z,0.9\n"
+    )
+    _upload, parsed, inserted = ingest_lab_csv(seeded, CASE_SYSTEM_ID, "gap.csv", body)
+    assert inserted == 2
+    assert parsed.rows_accepted + parsed.rows_rejected == parsed.rows_total
+    assert parsed.errors[0].row_number == 2, "the refusal names the file's own line"
+
+
 # --------------------------------------------------------------------- M2 ---
 
 
