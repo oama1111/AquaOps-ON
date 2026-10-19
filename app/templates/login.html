@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AquaOps ON — sign in</title>
+  {# No script on this page: signing in must work on any browser the operator has,
+     and a page that only collects a secret has no reason to run code. #}
+  <style>
+    :root { --ink:#0b2545; --muted:#6b7f92; --line:#dae4ee; --brand:#0f6ea8;
+            --bad:#a8231c; --bad-bg:#fdecea; --bad-line:#f0b5b1; }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      color:var(--ink); background:linear-gradient(135deg, #0b2545 0%, #0e3f66 55%, #0f6ea8 100%);
+      font:15px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding:16px;
+    }
+    main {
+      width:100%; max-width:380px; background:#fff; border-radius:10px;
+      padding:24px 24px 20px; box-shadow:0 4px 24px rgba(11,37,69,.25);
+    }
+    h1 { margin:0 0 4px; font-size:19px; font-weight:650; }
+    p { margin:0 0 16px; color:var(--muted); font-size:13px; }
+    label { display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--muted); }
+    input {
+      font:inherit; font-size:14px; padding:8px 10px; border:1px solid #c3d4e4;
+      border-radius:6px; color:var(--ink);
+    }
+    button {
+      margin-top:14px; width:100%; font:inherit; font-weight:550; padding:9px 15px;
+      border-radius:6px; border:1px solid var(--brand); background:var(--brand);
+      color:#fff; cursor:pointer;
+    }
+    button:hover { background:#0d5f92; }
+    input:focus-visible, button:focus-visible { outline:2px solid #0d8fb8; outline-offset:2px; }
+    .error {
+      background:var(--bad-bg); border:1px solid var(--bad-line); color:var(--bad);
+      border-radius:6px; padding:8px 12px; margin:0 0 14px; font-size:13.5px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>AquaOps ON</h1>
+    <p>Sign in with the operator token issued for this installation.</p>
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form method="post" action="/login">
+      <input type="hidden" name="next" value="{{ next_path }}">
+      <label>Operator token
+        <input type="password" name="token" required autocomplete="current-password" autofocus>
+      </label>
+      <button type="submit">Sign in</button>
+    </form>
+  </main>
+</body>
+</html>

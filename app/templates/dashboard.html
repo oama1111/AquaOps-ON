@@ -50,6 +50,14 @@
       color:#f4e4c4; font-size:12.5px;
     }
 
+    header { position:relative; }
+    form.session {
+      position:absolute; top:16px; right:28px; display:flex; align-items:center; gap:10px;
+      margin:0; font-size:12.5px; color:#b9d6ea;
+    }
+    form.session strong { color:#fff; }
+    form.session button { padding:4px 11px; font-size:12.5px; }
+
     /* ----------------------------------------------------------------- cards */
     main { padding:22px 28px 60px; display:grid; gap:20px; max-width:1180px; }
     section {
@@ -189,6 +197,7 @@
        scroller so every column stays reachable, and the header and totals wrap. */
     @media (max-width: 760px) {
       header { padding:14px 16px; }
+      form.session { position:static; margin:10px 0 0; }
       main { padding:14px 16px 40px; }
       section { padding:0 12px 14px; }
       section > h2 { margin:0 -12px 12px; padding:11px 12px 10px; }
@@ -212,6 +221,12 @@
         <p class="tagline">Sampling compliance &amp; chlorine early warning · O. Reg. 170/03</p>
       </div>
     </div>
+    {% if operator %}
+    <form class="session" method="post" action="/logout">
+      <span>Signed in as <strong>{{ operator }}</strong></span>
+      <button type="submit" class="secondary">Sign out</button>
+    </form>
+    {% endif %}
     <p class="disclaimer">Decision support only. Output is not legal proof of compliance;
       licensed operator judgment prevails.</p>
   </header>

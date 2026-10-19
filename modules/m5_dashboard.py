@@ -47,6 +47,7 @@ def render_shell(
     week_html: str,
     trend_html: str = "",
     upload_html: str = "",
+    operator: str | None = None,
 ) -> str:
     """The dashboard shell.
 
@@ -54,6 +55,9 @@ def render_shell(
     only refreshes them afterwards, so the page still shows the duty list and
     the alert inbox if the HTMX script never loads — which matters on the aging
     municipal laptops ADR-4 was written for.
+
+    ``operator`` is the signed-in operator; when set, the header names them and
+    offers a sign-out button. It is ``None`` when authentication is off.
     """
     return _render(
         "dashboard.html",
@@ -63,7 +67,13 @@ def render_shell(
         week_html=week_html,
         trend_html=trend_html,
         upload_html=upload_html,
+        operator=operator,
     )
+
+
+def render_login(*, next_path: str = "/", error: str | None = None) -> str:
+    """The operator sign-in page: one token field, no script."""
+    return _render("login.html", next_path=next_path, error=error)
 
 
 def render_network_status(points: Iterable[Any], alerts_by_point: dict[str, int]) -> str:
@@ -71,13 +81,17 @@ def render_network_status(points: Iterable[Any], alerts_by_point: dict[str, int]
     return _render("_network_status.html", points=list(points), alerts_by_point=alerts_by_point)
 
 
-def render_alert_inbox(alerts: Iterable[Any], notice: str | None = None) -> str:
+def render_alert_inbox(
+    alerts: Iterable[Any], notice: str | None = None, operator: str | None = None
+) -> str:
     """Open-alert fragment with an acknowledge form per alert. (`GET /dash/alerts`)
 
     ``notice`` reports an acknowledgement that could not be recorded, in the
-    place the operator is already looking.
+    place the operator is already looking. ``operator`` is the signed-in
+    operator: the form then shows that identity instead of asking for one,
+    because it is the identity the acknowledgement will be recorded under.
     """
-    return _render("_alert_inbox.html", alerts=list(alerts), notice=notice)
+    return _render("_alert_inbox.html", alerts=list(alerts), notice=notice, operator=operator)
 
 
 def render_week_view(

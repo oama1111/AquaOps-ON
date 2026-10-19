@@ -7,6 +7,9 @@ The POST routes are the operator's actions. Each answers an HTMX request with
 the fragment it changed, and a plain form post (no JavaScript) with the whole
 page or a redirect back to it, so every action works either way. They call the
 same services as the `/api/v1` endpoints; nothing here has its own rules.
+
+When operator authentication is on, `app/auth.py` has already admitted the
+request before it reaches this router, and `current_operator` names who it is.
 """
 
 from __future__ import annotations
@@ -30,6 +33,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth import current_operator
 from app.db import get_session
 from app.models import ChlorineReading, RoutePlan, SamplingPoint, WaterSystem
 from app.schemas.enums import PlanStatus
@@ -165,29 +169,34 @@ def _trend_html(session: Session, point: str | None) -> str:
     return render_trend(point_ids, point, chart)
 
 
-def _page(session: Session, *, point: str | None = None, upload_html: str = "") -> Response:
+def _page(
+    request: Request, session: Session, *, point: str | None = None, upload_html: str = ""
+) -> Response:
     system = session.get(WaterSystem, CASE_SYSTEM_ID)
     if system is None:
         raise HTTPException(status_code=503, detail="case system is not seeded")
+    operator = current_operator(request)
     html = render_shell(
         system_name=system.name,
         network_html=render_network_status(
             _point_views(session, CASE_SYSTEM_ID), alerts_by_point(session, CASE_SYSTEM_ID)
         ),
-        alerts_html=render_alert_inbox(open_alerts(session, CASE_SYSTEM_ID)),
+        alerts_html=render_alert_inbox(open_alerts(session, CASE_SYSTEM_ID), operator=operator),
         week_html=_week_html(session, current_week()),
         trend_html=_trend_html(session, point),
         upload_html=upload_html,
+        operator=operator,
     )
     return _html(html)
 
 
 @router.get("/", response_class=Response)
 def dashboard(
+    request: Request,
     point: str | None = Query(default=None, description="sampling point for the trend chart"),
     session: Session = Depends(get_session),
 ) -> Response:
-    return _page(session, point=point)
+    return _page(request, session, point=point)
 
 
 @router.get("/dash/network", response_class=Response)
@@ -199,8 +208,10 @@ def dash_network(session: Session = Depends(get_session)) -> Response:
 
 
 @router.get("/dash/alerts", response_class=Response)
-def dash_alerts(session: Session = Depends(get_session)) -> Response:
-    html = render_alert_inbox(open_alerts(session, CASE_SYSTEM_ID))
+def dash_alerts(request: Request, session: Session = Depends(get_session)) -> Response:
+    html = render_alert_inbox(
+        open_alerts(session, CASE_SYSTEM_ID), operator=current_operator(request)
+    )
     return Response(content=html, media_type="text/html")
 
 
@@ -255,7 +266,7 @@ async def dash_upload(
             changed = inserted > 0
     if _is_htmx(request):
         return _html(receipt, trigger="readings-changed" if changed else None)
-    return _page(session, upload_html=receipt)
+    return _page(request, session, upload_html=receipt)
 
 
 @router.post("/dash/alerts/{alert_id}/ack", response_class=Response)
@@ -266,8 +277,14 @@ def dash_acknowledge(
     note: str = Form(default=""),
     session: Session = Depends(get_session),
 ) -> Response:
-    """Acknowledge from the inbox. Recorded with who and when; never a delete."""
-    operator_id = operator_id.strip()
+    """Acknowledge from the inbox. Recorded with who and when; never a delete.
+
+    With authentication on, "who" is the signed-in operator rather than whatever
+    was typed: an audit trail whose names can be typed freely records claims,
+    not identities.
+    """
+    signed_in = current_operator(request)
+    operator_id = signed_in or operator_id.strip()
     notice = None
     if not operator_id:
         notice = "Enter your operator ID to acknowledge an alert."
@@ -276,7 +293,9 @@ def dash_acknowledge(
     if not _is_htmx(request):
         return RedirectResponse("/#alert-inbox", status_code=303)
     return _html(
-        render_alert_inbox(open_alerts(session, CASE_SYSTEM_ID), notice=notice),
+        render_alert_inbox(
+            open_alerts(session, CASE_SYSTEM_ID), notice=notice, operator=signed_in
+        ),
         trigger=None if notice else "alerts-changed",
     )
 

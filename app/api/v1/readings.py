@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.auth import current_operator
 from app.db import get_session
 from app.models import AnomalyAlert, ChlorineReading
 from app.schemas.enums import AlertModel, AlertSeverity, ReadingSource, ReasonCode
@@ -126,9 +127,16 @@ def list_alerts(
 
 @router.post("/alerts/{alert_id}/ack", response_model=AlertOut)
 def ack_alert(
-    alert_id: str, body: AlertAck, session: Session = Depends(get_session)
+    alert_id: str, body: AlertAck, request: Request, session: Session = Depends(get_session)
 ) -> AlertOut:
-    row = acknowledge(session, alert_id, body.operator_id, body.note)
+    """Acknowledge an alert.
+
+    With operator authentication on, the acknowledgement is recorded under the
+    operator the bearer token belongs to, and ``operator_id`` in the body is
+    ignored; with it off, the body's ``operator_id`` is recorded as sent.
+    """
+    operator_id = current_operator(request) or body.operator_id
+    row = acknowledge(session, alert_id, operator_id, body.note)
     if row is None:
         raise HTTPException(
             status_code=404, detail="alert not found, or already acknowledged"

@@ -23,9 +23,16 @@
   {# Acknowledging records who and when; the alert is kept, never deleted. #}
   <form class="inline" method="post" action="/dash/alerts/{{ alert.id }}/ack"
         hx-post="/dash/alerts/{{ alert.id }}/ack" hx-target="#alert-inbox" hx-swap="innerHTML">
+    {% if operator %}
+    {# Signed in: the acknowledgement is recorded under the session's identity. #}
+    <label>Operator ID
+      <input value="{{ operator }}" readonly aria-readonly="true">
+    </label>
+    {% else %}
     <label>Operator ID
       <input name="operator_id" required maxlength="40" autocomplete="username">
     </label>
+    {% endif %}
     <label><span>Note <span class="meta">(optional)</span></span>
       <input name="note" maxlength="200">
     </label>

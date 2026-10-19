@@ -94,7 +94,10 @@ JavaScript, and a server-side drawing meets both without a new dependency.
 
 ## 7. Conventions
 
-- Auth: single-operator token (case scope); role model deferred post-capstone.
+- Auth: `Authorization: Bearer <operator token>` on every `/api/v1` call when
+  `AQUAOPS_OPERATOR_TOKENS` is set; `401` with `WWW-Authenticate: Bearer`
+  otherwise. `GET /health` stays open. One role; the role model is deferred
+  post-capstone. See `docs/deployment.md` §3.1.
 - Validation: Pydantic schemas in `app/schemas/`; 422 bodies list every
   failing field.
 - Idempotency: `Idempotency-Key` header honoured on all POST ingest/plan
