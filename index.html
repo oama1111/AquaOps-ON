@@ -8,7 +8,7 @@
 <style>
   :root{
     --ink:#0f2733; --muted:#4c6572; --accent:#0e7490; --accent-2:#155e75;
-    --card:#ffffff; --bg:#f4f8fa; --line:#d9e5ea; --ok:#0f766e;
+    --card:#ffffff; --bg:#f4f8fa; --line:#d9e5ea; --ok:#0f766e; --warn:#b45309;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -33,6 +33,11 @@
   .metric .v{font-size:1.5rem;font-weight:700;color:var(--accent-2)}
   .metric .l{font-size:.85rem;color:var(--muted)}
   .metric .t{font-size:.78rem;color:var(--ok);margin-top:2px}
+  .metric .t.warn{color:var(--warn)}
+  .metric.warn{border-color:var(--warn)}
+  .note{background:var(--card);border-left:4px solid var(--warn);border-radius:6px;padding:14px 18px;margin-top:18px}
+  .note h3{margin:0 0 6px;font-size:1rem}
+  .note p{margin:6px 0}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:10px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
   .card h3{margin-top:0}
@@ -71,15 +76,29 @@
 <section id="results">
   <h2>Measured results</h2>
   <p class="muted">Seven success criteria were frozen at proposal stage and evaluated on the integrated,
-  deployed system. All six measurable criteria passed; the usability criterion was partly met.</p>
+  deployed system. All six measurable criteria passed on the simulated case network; the usability
+  criterion was partly met. An independent benchmark on real utility data then showed that the detection
+  result does not transfer (see below).</p>
   <div class="grid">
-    <div class="metric"><div class="v">0.788</div><div class="l">Anomaly detection F1</div><div class="t">vs. 0.0 fixed-threshold baseline ✓</div></div>
+    <div class="metric warn"><div class="v">0.788</div><div class="l">Anomaly detection F1 (simulated case)</div><div class="t warn">independent GECCO 2018 data: 0.070 — did not transfer ✗</div></div>
     <div class="metric"><div class="v">9 cycles</div><div class="l">Median warning lead time</div><div class="t">target ≥ 1 sampling cycle ✓</div></div>
     <div class="metric"><div class="v">0</div><div class="l">Missed regulatory windows</div><div class="t">hard constraint held ✓</div></div>
     <div class="metric"><div class="v">−15.84%</div><div class="l">Route mileage vs. nearest-neighbour</div><div class="t">target ≥ 15% saving ✓</div></div>
     <div class="metric"><div class="v">7.06 ms</div><div class="l">API p95 latency</div><div class="t">target &lt; 300 ms ✓</div></div>
-    <div class="metric"><div class="v">95%</div><div class="l">Test coverage (109 tests)</div><div class="t">target ≥ 70% ✓</div></div>
+    <div class="metric"><div class="v">95%</div><div class="l">Test coverage (137 tests)</div><div class="t">target ≥ 70% ✓</div></div>
     <div class="metric"><div class="v">70.5</div><div class="l">System Usability Scale (n = 5)</div><div class="t">target ≥ 68 — partly met</div></div>
+  </div>
+  <div class="note">
+    <h3>Independent benchmark: an honest negative result</h3>
+    <p>The F1 above was measured on a decay episode injected into the simulated network. Replayed unmodified on
+    the externally labelled <a href="https://doi.org/10.5281/zenodo.3884398">GECCO 2018</a> utility data set
+    (139,566 real readings, 51 organiser-labelled events), the detector raised 87–147 false-alarm episodes a week
+    against a budget of two, hit no more events than chance, and scored below a simple rolling three-sigma rule.
+    The cause is three calibration choices — a watch level tied to Ontario's provincial mean, a per-window
+    Isolation Forest percentile cut, and a noise estimate with no floor for quantized sensors — now the first item
+    of future work.</p>
+    <p><a href="https://github.com/oama1111/AquaOps-ON/blob/main/examples/unit8_gecco_benchmark.py">Benchmark script</a> ·
+       <a href="https://github.com/oama1111/AquaOps-ON/blob/main/docs/evidence/2026-10-19-unit8-gecco-benchmark.json">Per-event results</a></p>
   </div>
 </section>
 
@@ -90,7 +109,7 @@
       <h3>Working prototype &amp; code</h3>
       <p>End-to-end pipeline — laboratory CSV import → anomaly alerts → regulation-derived duties →
       routed weekly plan → operator dashboard — delivered as a single Docker image with a verified
-      field deployment.</p>
+      field deployment behind TLS and operator token authentication.</p>
       <p><a href="https://github.com/oama1111/AquaOps-ON">Repository</a> ·
          <a href="https://github.com/oama1111/AquaOps-ON/tags">Per-unit release tags u1–u8</a></p>
     </div>
@@ -105,7 +124,8 @@
     <div class="card">
       <h3>Deployment &amp; operations</h3>
       <p>Containerized deployment with a written configuration record a third party can reproduce,
-      plus a maintenance plan with regression, backup, and rule-amendment procedures.</p>
+      plus a maintenance plan with regression, backup, and rule-amendment procedures. Operators sign in
+      with per-operator tokens (bearer for the API, a signed session cookie for the dashboard).</p>
       <p><a href="https://github.com/oama1111/AquaOps-ON/blob/main/docs/deployment.md">Deployment guide</a></p>
     </div>
     <div class="card">
@@ -115,6 +135,12 @@
       <p><a href="https://github.com/oama1111/AquaOps-ON/actions">CI runs</a> ·
          <a href="https://github.com/oama1111/AquaOps-ON/pulls">Pull requests</a> ·
          <a href="https://github.com/users/oama1111/projects/1">Project board</a></p>
+    </div>
+    <div class="card">
+      <h3>Final presentation video</h3>
+      <p>A 13-minute recorded presentation and live demonstration: architecture, measured results,
+      and the full operator workflow from laboratory upload to a confirmed route sheet.</p>
+      <p><a href="https://www.youtube.com/watch?v=Z1rHIMWoeJY">Watch on YouTube</a></p>
     </div>
   </div>
 </section>
@@ -148,7 +174,7 @@
     <span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">SQLAlchemy</span>
     <span class="tag">Pydantic</span><span class="tag">Jinja2 + HTMX</span><span class="tag">Chart.js</span>
     <span class="tag">scikit-learn</span><span class="tag">WNTR (EPANET)</span><span class="tag">SQLite / PostgreSQL</span>
-    <span class="tag">pytest + pytest-cov</span><span class="tag">Docker Compose</span><span class="tag">GitHub Actions</span>
+    <span class="tag">pytest + pytest-cov</span><span class="tag">Docker Compose</span><span class="tag">GitHub Actions</span><span class="tag">Caddy (TLS)</span><span class="tag">Operator token auth</span>
   </div>
 </section>
 
