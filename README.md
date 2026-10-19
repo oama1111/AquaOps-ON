@@ -25,12 +25,13 @@ regulatory obligations and chlorine trends into an executable daily work plan.
 | Unit 4 — implemented vertical slice, dashboard, CI pipeline | complete |
 | Unit 5 — unit testing of the critical modules, 95 % coverage | complete |
 | Unit 6 — system integration, performance evaluation, deployment plan | complete |
-| Units 7–8 — system test report, final documentation, demo | in progress |
+| Units 7–8 — system test report, final documentation, demo | complete |
+| Unit 8 follow-up — operator token authentication, independent benchmark | complete |
 
 All six modules in `modules/` are implemented and exercised by the test suite:
 M1 ingestion and registry, M2 the EWMA ∪ Isolation Forest detector, M3 the
 sweep + 2-opt planner, M4 the O. Reg. 170/03 rule engine, M5 the dashboard, and
-M6 the evaluation harness. `pytest` reports **91 passed** and **94 % statement
+M6 the evaluation harness. `pytest` reports **137 passed** and **95 % statement
 coverage** against the 70 % floor that criterion C6 sets. Two unit-test
 categories are declared in `pytest.ini` and can be run separately:
 
@@ -38,6 +39,17 @@ categories are declared in `pytest.ini` and can be run separately:
 pytest -m unit_whitebox   # tests against named internal helpers and branches
 pytest -m unit_blackbox   # tests against the public module contracts
 ```
+
+**Independent benchmark (Unit 8).** The detector's F1 of 0.7879 was measured on an
+episode injected into the simulated case network. Replayed unmodified on the
+externally labelled GECCO 2018 utility data set (Moritz et al., 2018;
+[doi:10.5281/zenodo.3884398](https://doi.org/10.5281/zenodo.3884398)), it did not
+transfer: 87–147 false-alarm episodes a week, no skill beyond chance, and a point
+F1 below a rolling three-sigma rule. The causes are three calibration choices —
+an absolute watch level tied to Ontario's provincial mean, a per-window Isolation
+Forest percentile cut, and a moving-range noise estimate with no floor for
+quantized sensors. Script: `examples/unit8_gecco_benchmark.py`; results:
+`docs/evidence/2026-10-19-unit8-gecco-benchmark.json`.
 
 The FastAPI core in `app/main.py` serves `GET /health`, the `/api/v1` contract
 and the operator dashboard. From the dashboard an operator can upload a
