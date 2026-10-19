@@ -1,0 +1,6 @@
+GECCO 2018: 139566 rows -> 13855 cycles over 13.8 weeks, 51 labelled events (6 chlorine-visible)
+frozen                 F1=0.0355 P=0.0183 R=0.5890 events 48/51 visible 6/6 false-alarm episodes/wk=146.96 lead=3.0 chance=50.4 alert-share=0.5093 {'ewma_shift_up': 0.123, 'iforest_outlier': 0.2022, 'trend_to_limit': 0.8895}
+site-scaled            F1=0.0697 P=0.0387 R=0.3516 events 31/51 visible 6/6 false-alarm episodes/wk=86.99 lead=0 chance=32.5 alert-share=0.1436 {'ewma_shift_up': 0.4362, 'iforest_outlier': 0.7171, 'trend_to_limit': 0.0075}
+threshold <0.05 mg/L   F1=0.1111 P=0.8667 R=0.0594 events 2/51 visible 2/6 false-alarm episodes/wk=0.07 lead=-5.0 chance=0.4 alert-share=0.0011 
+rolling 3-sigma        F1=0.1076 P=0.1418 R=0.0868 events 7/51 visible 6/6 false-alarm episodes/wk=6.43 lead=-1 chance=3.4 alert-share=0.0097 
+runtime 464.2 s
