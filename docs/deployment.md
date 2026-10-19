@@ -105,10 +105,75 @@ release; because it is data in `rules/oreg170.yaml`, it was a reviewed edit.
 | `AQUAOPS_LOG_LEVEL` | `info` | uvicorn log level | `warning` reduces log volume on a small disk; `debug` while diagnosing |
 | `AQUAOPS_CHROME` | unset | Path to a Chromium binary for `examples/unit6_ui.py` | Non-macOS machines, or Chrome installed elsewhere |
 | `MPLCONFIGDIR` | `/tmp/mplcache` | Matplotlib's font cache | Must point somewhere writable. A read-only `HOME` makes the first `import wntr` rebuild the font cache and the process appears to hang — a defect found in Unit 5 and carried into this image as a default |
-| `AQUAOPS_AUTH_TOKEN` | unset | Single-operator API token | **Required before serving anything off-host.** Unset means the API is open, which is acceptable only on loopback |
+| `AQUAOPS_OPERATOR_TOKENS` | unset | Operator credentials: `operator_id=token` entries, comma-separated; a token may be written as `sha256:<hex digest>` instead of in clear (Section 3.1) | **Required before serving anything off-host.** Unset means the API and dashboard are open — acceptable only on loopback — and startup logs a warning saying so |
+| `AQUAOPS_AUTH_TOKEN` | unset | The Unit 6 single-operator variable, still honoured as operator `operator` | Prefer `AQUAOPS_OPERATOR_TOKENS`, which names each operator in the audit trail |
 
 `AQUAOPS_DB_PASSWORD` is referenced by the commented PostgreSQL block in
 `docker-compose.yml` and must be supplied from a secret store, never committed.
+
+### 3.1 Operator authentication
+
+The application enforces authentication itself (`app/auth.py`) whenever
+`AQUAOPS_OPERATOR_TOKENS` is set. **A production deployment must set it.**
+
+Generate one token per operator, on any machine with Python:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+and, to keep the clear token out of the unit file, its SHA-256 digest:
+
+```bash
+python -c "import hashlib, sys; print(hashlib.sha256(sys.argv[1].encode()).hexdigest())" '<token>'
+```
+
+Then configure, for example:
+
+```bash
+AQUAOPS_OPERATOR_TOKENS="op-1=sha256:<digest of op-1's token>,op-2=sha256:<digest of op-2's token>"
+```
+
+Give each operator their own clear token; the server only ever holds and
+compares SHA-256 digests (with `hmac.compare_digest`), and no token is written
+to the log. Operator ids are 1–40 characters from `A-Z a-z 0-9 _ . @ -`. A
+malformed variable — a missing `=`, a clear token shorter than 20 characters, a
+truncated digest, a repeated operator id — stops the application at startup
+rather than leaving it open or an operator locked out. Treat the variable as a
+secret even in digest form: the digest is also the key that signs that
+operator's dashboard sessions.
+
+| Path | With tokens configured |
+| --- | --- |
+| `GET /health` | **Open.** The container `HEALTHCHECK` and the CI probe carry no credentials; the answer is only the status and version |
+| `/static/*` | Open. The only asset is the public, pinned htmx bundle |
+| `/login`, `/logout` | Open, so a session can always be started or ended |
+| `/api/v1/*` | `Authorization: Bearer <token>` only. Anything else is `401` with `WWW-Authenticate: Bearer realm="aquaops"`. The dashboard cookie is deliberately not accepted here |
+| `/docs`, `/redoc`, `/openapi.json` | Session cookie or bearer token. The API description is a map of the attack surface, so it is not public, but an operator signed in to the dashboard can read it, and the Swagger page's **Authorize** button takes a token for "Try it out" |
+| The dashboard (`/`) and its fragments (`/dash/*`) | Session cookie (or bearer token). Without one, a page load is redirected (`303`) to `/login`; an HTMX fragment request gets `401` with `HX-Redirect: /login`, so htmx moves the whole tab to the sign-in page instead of swapping an error into a panel |
+
+**Dashboard sessions.** `/login` is a one-field form that takes the operator's
+token. On success it sets `aquaops_session`: `HttpOnly`, `SameSite=Strict`,
+`Secure` whenever the request arrived over HTTPS, valid for 12 hours (one
+shift). The cookie carries the operator id and expiry, signed with an HMAC keyed
+by that operator's token digest, so it cannot be forged without the token, and
+rotating a token ends every session it opened. **Sign out** in the dashboard
+header clears it.
+
+**Who acknowledged.** With authentication on, an acknowledgement — from the
+dashboard or from `POST /api/v1/alerts/{id}/ack` — is recorded under the
+authenticated operator, not under a typed name. The dashboard shows the
+signed-in id in the acknowledge form instead of asking for one.
+
+**Behind the proxy.** `Secure` depends on the application seeing the original
+scheme. Caddy sends `X-Forwarded-Proto`, and uvicorn trusts it from `127.0.0.1`
+by default (the Dockerfile also passes `--proxy-headers`), so a proxy on the same
+host needs no extra setting. If the proxy runs elsewhere, start uvicorn with
+`--forwarded-allow-ips=<proxy address>`.
+
+**The Caddy `basic_auth` gate is now defence in depth**, not the only control.
+It can stay in front — operators then pass two prompts once per session — or be
+removed once the tokens are set; the application no longer depends on it.
 
 ---
 
@@ -246,7 +311,7 @@ demonstrable system with no data download step.
 | `tests/`, `examples/` | Development artefacts; `examples/` would re-introduce the simulation stack |
 | `data/raw/` (DWSP, BattLeDIM) | Hundreds of megabytes of public source data; the derived, committed case data is what the application reads |
 | The developer's `*.db` | Deployment state, not an image input |
-| Any credential | `AQUAOPS_AUTH_TOKEN` and `AQUAOPS_DB_PASSWORD` come from the deployment's secret store |
+| Any credential | `AQUAOPS_OPERATOR_TOKENS` and `AQUAOPS_DB_PASSWORD` come from the deployment's secret store |
 
 ---
 
@@ -266,12 +331,16 @@ them:
    ([run 35466525951](https://github.com/oama1111/AquaOps-ON/actions/runs/35466525951),
    on tag `u6`). Building the image on the deployment host itself remains the
    first item of remaining work.
-2. **There is no authentication in the application.** The Unit 3 specification
-   defers the role model, and `AQUAOPS_AUTH_TOKEN` is declared but not yet
-   enforced by a middleware. The 2026-10-01 field deployment (Section 8) works
-   around this exactly as this document advises — basic authentication at the
-   Caddy reverse proxy — but any deployment must keep that gate in front until
-   the middleware exists.
+2. **Authentication is one role.** Since Unit 8 the application enforces
+   operator tokens itself (Section 3.1), and the Caddy basic-auth gate the
+   2026-10-01 field deployment (Section 8) relied on is defence in depth rather
+   than the only control. What remains deferred, as the Unit 3 specification
+   says, is the role model: every configured operator can do everything. There
+   is also no lockout or rate limit on `/login`; with 256-bit random tokens
+   guessing is not a practical attack, but the proxy gate still absorbs it.
+   Authentication is off when `AQUAOPS_OPERATOR_TOKENS` is unset, so a
+   deployment that forgets it is open — startup logs a warning to make that
+   visible.
 3. **SQLite means one writer.** This is a deliberate single-town trade, not an
    oversight, and PostgreSQL is the documented exit.
 4. **There is no alerting on the container itself.** Docker's own log rotation is
@@ -295,7 +364,7 @@ runtime. Recorded here so the configuration is reproducible:
 | Application | `/srv/aquaops/app`, exported with `git archive` from `feature/dashboard-polish` (app, modules, rules, `data/networks/` only) |
 | Python environment | `/srv/aquaops/venv` from `requirements-runtime.txt` (scikit-learn included; WNTR/pandas/matplotlib excluded) |
 | Process | `aquaops.service` under `systemd`, dedicated `aquaops` user, bound to `127.0.0.1:8000`, enabled at boot |
-| Reverse proxy | Caddy site block in `/etc/caddy/Caddyfile`: TLS by Let's Encrypt, HTTP→HTTPS redirect, `basic_auth` gate (shared operator password, hash in the Caddyfile) — this is the authentication the application itself does not yet enforce (limitation 2) |
+| Reverse proxy | Caddy site block in `/etc/caddy/Caddyfile`: TLS by Let's Encrypt, HTTP→HTTPS redirect, `basic_auth` gate (shared operator password, hash in the Caddyfile). At the time of this run it was the only authentication; since Unit 8 the application enforces operator tokens itself (Section 3.1) and the gate is defence in depth |
 | Database | `/srv/aquaops/app/aquaops.db`, seeded for the current ISO week (`examples/seed_demo.py` re-run between sessions) |
 | Resident memory | ~59 MiB for the service; ~517 MiB free on the 1 GB host |
 

@@ -28,7 +28,9 @@ services:
       # here, and nothing that differs is in the image.
       AQUAOPS_DB_URL: sqlite:////data/aquaops.db
       AQUAOPS_EVIDENCE_DIR: /data/evidence
-      # AQUAOPS_AUTH_TOKEN: set-in-the-deployment-secret-store
+      # Operator authentication (docs/deployment.md §3.1). Unset = open, which is
+      # acceptable on loopback only. Supply from the deployment's secret store:
+      # AQUAOPS_OPERATOR_TOKENS: op-1=sha256:<digest>,op-2=sha256:<digest>
     volumes:
       # Named volume rather than a bind mount: the compliance database is the
       # record of what the system told the operator to do, so it must outlive

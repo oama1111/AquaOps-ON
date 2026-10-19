@@ -62,8 +62,40 @@ python examples/unit6_ui.py            # heuristic usability review + screenshot
 Their findings are summarised in [`docs/deployment.md`](docs/deployment.md),
 which is the deployment plan and the configuration record. Since 2026-10-01 the
 system also runs on a real host — a small VPS serving `https://aquaops-on.locoko.com`
-through Caddy (TLS plus a basic-auth gate at the proxy, since the application
-middleware is not implemented yet), recorded as Section 8 of that document.
+through Caddy (TLS plus a basic-auth gate at the proxy), recorded as Section 8 of
+that document. Since Unit 8 the application also authenticates operators itself;
+see [Security](#security).
+
+## Security
+
+The application enforces operator authentication when `AQUAOPS_OPERATOR_TOKENS`
+is set, and **a production deployment must set it**:
+
+```bash
+# one token per operator
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# configure by SHA-256 digest so the clear token never sits in a unit file
+AQUAOPS_OPERATOR_TOKENS="op-1=sha256:<hex digest>,op-2=sha256:<hex digest>"
+```
+
+- `/api/v1/*` requires `Authorization: Bearer <token>`; anything else is `401`
+  with a `WWW-Authenticate` challenge.
+- The dashboard has a sign-in page that sets an `HttpOnly`, `SameSite=Strict`
+  session cookie (`Secure` over HTTPS) for one 12-hour shift, and a sign-out
+  button. HTMX panels whose session has lapsed send the tab back to sign-in.
+- Acknowledgements are recorded under the authenticated operator, so the audit
+  trail names who acted rather than who was typed.
+- `GET /health` stays open for the container health probe; `/docs` and
+  `/openapi.json` need a session or a token.
+- Tokens are held and compared only as SHA-256 digests (`hmac.compare_digest`)
+  and are never logged.
+
+When the variable is unset the system is open, exactly as before, so the demo
+seed, the test suite and the loopback evidence scripts work unchanged; startup
+logs a warning saying so. The Caddy basic-auth gate on the field deployment is
+now defence in depth rather than the only control. Details, including the path
+table and proxy notes, are in [`docs/deployment.md` §3.1](docs/deployment.md#31-operator-authentication).
 
 ## Repository layout
 
