@@ -374,6 +374,16 @@ form returns 303 and the inbox drops to "0 open" (write path and file
 permissions correct under the dedicated user); the week view shows the 36-stop,
 9.838 km plan with the first stop's vehicle and ETA.
 
+**Redeploy with operator tokens (2026-10-19).** `main` at `d60e79b` was exported
+to `/srv/aquaops/app` with the previous release kept as
+`/srv/aquaops/app.bak-20261019-175242` and the database left in place. The token
+digest lives in `/etc/aquaops/operator-tokens.env` (root:aquaops, 0640), loaded by a
+systemd drop-in; the clear token was shown once at generation and is not stored on
+the host. Smoke checks on `127.0.0.1:8000`: `/health` 200, `GET /api/v1/rules` 401
+without a token and 200 with one, `/` and `/docs` 303 to the sign-in page. The
+Caddy `basic_auth` gate is unchanged and now sits in front of the application's own
+check. The procedure is scripted in the coursework repository as `deploy-vps.sh`.
+
 One DNS lesson worth recording: the hostname sat behind a Cloudflare proxied
 record ("orange cloud") at first, and the combination of Cloudflare's plain-HTTP
 origin fetch with Caddy's HTTPS redirect looped with 308 responses. Switching
