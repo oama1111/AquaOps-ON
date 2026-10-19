@@ -32,6 +32,17 @@ def isolated_evidence_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setenv("AQUAOPS_EVIDENCE_DIR", str(tmp_path / "evidence"))
 
 
+@pytest.fixture(autouse=True)
+def authentication_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Start every test with operator authentication unset, as on a fresh clone.
+
+    A developer shell (or a CI secret) that exports a token must not turn the
+    whole suite into a run of 401s; ``tests/test_auth.py`` sets one explicitly.
+    """
+    monkeypatch.delenv("AQUAOPS_OPERATOR_TOKENS", raising=False)
+    monkeypatch.delenv("AQUAOPS_AUTH_TOKEN", raising=False)
+
+
 @pytest.fixture()
 def db_url(tmp_path: Path) -> str:
     return f"sqlite:///{tmp_path / 'aquaops-test.db'}"
